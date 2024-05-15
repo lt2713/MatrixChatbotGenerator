@@ -52,20 +52,20 @@ class Question:
         return True
 
     def print(self):
-        print(f'id: {self.id}')
+        print(f'Question id: {self.id}')
         print(f'type {self.type}')
         print(f'text: {self.text}')
-        if len(self.answers > 0):
+        if len(self.answers) > 0:
             print('Answers:')
             for answer in self.answers:
                 answer.print()
-        if len(self.feedback > 0):
+        if len(self.feedback) > 0:
             print('Feedback:')
             for feedback in self.feedback:
                 feedback.print()
 
     def print_short(self):
-        print(self.id + '\t' + self.type + '\t' + self.text)
+        print('Question ' + self.id + '\t' + self.type + '\t' + self.text)
         if len(self.answers) > 0:
             print('Answers:')
             for answer in self.answers:

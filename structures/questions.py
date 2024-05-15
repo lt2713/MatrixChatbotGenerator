@@ -21,4 +21,5 @@ class Questions:
 
     def print_short(self):
         for question in self.questions:
+            print('\n')
             question.print_short()

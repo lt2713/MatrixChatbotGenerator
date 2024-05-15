@@ -7,6 +7,7 @@ import os
 from structures.transaction import Transaction
 from structures.question import Question
 from classes.QTIParser import QTIParser
+from classes.ChatbotGenerator import ChatbotGenerator
 
 
 class UserInterface:
@@ -103,7 +104,8 @@ class UserInterface:
             self.questions = qtiparser.get_questions()
 
         transaction = Transaction(course_name, year, chatbot_name, messages_per_day, selected_file)
-        
+        cg = ChatbotGenerator(transaction, self.questions)
+        cg.start()
 
     def loop(self):
         self.root.mainloop()
