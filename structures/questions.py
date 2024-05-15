@@ -15,3 +15,10 @@ class Questions:
     def get_number_of_questions(self):
         return len(self.questions)
 
+    def print(self):
+        for question in self.questions:
+            question.print()
+
+    def print_short(self):
+        for question in self.questions:
+            question.print_short()

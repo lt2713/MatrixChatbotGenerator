@@ -17,3 +17,6 @@ class Answer:
         print(f'id: {self.id}')
         print(f'text: {self.text}')
         print(f'correct: {self.correct}')
+
+    def print_short(self):
+        print(self.id + ' ' + self.text + ' ' + self.correct)

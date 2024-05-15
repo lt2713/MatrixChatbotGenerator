@@ -12,3 +12,6 @@ class Feedback:
     def print(self):
         print(f'id: {self.id}')
         print(f'text: {self.text}')
+
+    def print_short(self):
+        print(self.id + ' ' + self.text)
