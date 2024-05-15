@@ -14,4 +14,4 @@ class Feedback:
         print(f'text: {self.text}')
 
     def print_short(self):
-        print(self.id + ' ' + self.text)
+        print(self.id + '\t' + self.text)

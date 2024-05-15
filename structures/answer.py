@@ -19,4 +19,4 @@ class Answer:
         print(f'correct: {self.correct}')
 
     def print_short(self):
-        print(self.id + ' ' + self.text + ' ' + self.correct)
+        print(self.id + '\t' + self.text + '\t' + str(self.correct))

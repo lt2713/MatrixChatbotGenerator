@@ -1,4 +1,5 @@
 import xml.etree.ElementTree as ET
+from structures.questions import Questions
 from structures.question import Question
 from structures.answer import Answer
 from structures.feedback import Feedback
@@ -6,10 +7,13 @@ from structures.feedback import Feedback
 
 def main(filename=None):
     if filename is None:
-        filename = 'lt_testquiz.xml'
+        filename = '../lt_testquiz.xml'
     tree = build_tree(filename)
-    questions = find_questions(tree)
-    print_questions(questions)
+    questions_found = find_questions(tree)
+    questions = Questions()
+    for question in questions_found:
+        questions.add(question)
+    questions.print_short()
 
 
 def build_tree(file):
@@ -79,15 +83,6 @@ def find_feedback(item, question):
             if text_content is not None:
                 feedback = Feedback(ident, text_content)
                 question.feedback.append(feedback)
-
-
-def print_questions(questions):
-    for question in questions:
-        print(question.id + ' ' + question.type + ' ' + question.text)
-        for answer in question.answers:
-            print(answer.id + ' ' + answer.text + ' ' + str(answer.correct))
-        for feedback in question.feedback:
-            print(feedback.id + ' ' + feedback.text)
 
 
 if __name__ == '__main__':

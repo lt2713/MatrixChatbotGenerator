@@ -37,7 +37,7 @@ class Question:
                 if not answer.validate():
                     return False
         if self.type == 'True - False':
-            if len(self.answers != 2):
+            if len(self.answers) != 2:
                 return False
             for answer in self.answers:
                 if not answer.validate():
@@ -65,12 +65,12 @@ class Question:
                 feedback.print()
 
     def print_short(self):
-        print(self.id + ' ' + self.type + ' ' + self.text)
-        if len(self.answers > 0):
+        print(self.id + '\t' + self.type + '\t' + self.text)
+        if len(self.answers) > 0:
             print('Answers:')
             for answer in self.answers:
                 answer.print_short()
-        if len(self.feedback > 0):
+        if len(self.feedback) > 0:
             print('Feedback:')
             for feedback in self.feedback:
                 feedback.print_short()
