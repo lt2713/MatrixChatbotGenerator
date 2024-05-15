@@ -1,7 +1,3 @@
-from structures.answer import Answer
-from structures.feedback import Feedback
-
-
 class Question:
     def __init__(self, identifier, question_type, text=None, answers=None, feedback=None):
         self.id = identifier

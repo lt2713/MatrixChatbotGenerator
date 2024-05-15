@@ -1,4 +1,4 @@
-from structures.question import Question
+from MatrixChatbotGenerator.structures.question import Question
 
 
 class Questions:

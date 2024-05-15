@@ -1,13 +1,11 @@
 import tkinter as tk
-import uuid
 from tkinter import filedialog
 from tkinter import ttk
 from tkinter import messagebox
 import os
-from structures.transaction import Transaction
-from structures.question import Question
-from classes.QTIParser import QTIParser
-from classes.ChatbotGenerator import ChatbotGenerator
+from MatrixChatbotGenerator.structures.transaction import Transaction
+from MatrixChatbotGenerator.classes.QTIParser import QTIParser
+from MatrixChatbotGenerator.classes.ChatbotGenerator import ChatbotGenerator
 
 
 class UserInterface:
@@ -16,7 +14,7 @@ class UserInterface:
         if not self.fileselection:
             self.questions = questions
 
-        # main
+        # MatrixChatbotGenerator
         self.root = tk.Tk()
         # set window title
         self.root.title('Create Chatbot from QTI')

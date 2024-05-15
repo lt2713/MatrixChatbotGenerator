@@ -1,8 +1,5 @@
-from structures.transaction import Transaction
-from structures.questions import Questions
-from structures.question import Question
-from structures.answer import Answer
-from structures.feedback import Feedback
+from MatrixChatbotGenerator.structures.transaction import Transaction
+from MatrixChatbotGenerator.structures.questions import Questions
 
 
 class ChatbotGenerator:
