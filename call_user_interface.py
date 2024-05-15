@@ -1,4 +1,4 @@
-from classes.user_interface import UserInterface
+from classes.UserInterface import UserInterface
 from structures.questions import Questions
 from classes.QTIParser import QTIParser
 

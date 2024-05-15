@@ -6,6 +6,7 @@ from tkinter import messagebox
 import os
 from structures.transaction import Transaction
 from structures.question import Question
+from classes.QTIParser import QTIParser
 
 
 class UserInterface:
@@ -97,8 +98,12 @@ class UserInterface:
                 return
 
         # Create new transaction
+        if self.fileselection:
+            qtiparser = QTIParser(selected_file)
+            self.questions = qtiparser.get_questions()
+
         transaction = Transaction(course_name, year, chatbot_name, messages_per_day, selected_file)
-        transaction.print()
+        
 
     def loop(self):
         self.root.mainloop()
