@@ -1,4 +1,5 @@
 import tkinter as tk
+import uuid
 from tkinter import filedialog
 from tkinter import ttk
 from tkinter import messagebox
@@ -8,7 +9,11 @@ from structures.question import Question
 
 
 class UserInterface:
-    def __init__(self):
+    def __init__(self, questions=None):
+        self.fileselection = not questions
+        if not self.fileselection:
+            self.questions = questions
+
         # main
         self.root = tk.Tk()
         # set window title
@@ -38,16 +43,20 @@ class UserInterface:
         tk.Label(self.root, text="Messages per day:").grid(row=3, column=0, padx=10, pady=5, sticky='w')
         self.year_options = ["1", "2", "3", "4"]
         self.msg_per_day_selected = tk.StringVar()
-        self.msg_per_day_dropdown = ttk.Combobox(self.root, textvariable=self.msg_per_day_selected, values=self.year_options)
+        self.msg_per_day_dropdown = ttk.Combobox(self.root, textvariable=self.msg_per_day_selected,
+                                                 values=self.year_options)
         self.msg_per_day_dropdown.grid(row=3, column=1, padx=10, pady=5, sticky='w')
         self.msg_per_day_dropdown.current(0)  # Set default selection
 
         # create select file button
-        self.default_file_name = "No file selected"
-        tk.Button(self.root, text='Select File', command=self.select_file)\
-            .grid(row=4, column=0, padx=10, pady=20, sticky='w')
-        self.file_label = tk.Label(self.root, text=self.default_file_name)
-        self.file_label.grid(row=4, column=1, padx=10, pady=20, sticky='w')
+        if self.fileselection:
+            self.default_file_name = "No file selected"
+            tk.Button(self.root, text='Select File', command=self.select_file)\
+                .grid(row=4, column=0, padx=10, pady=20, sticky='w')
+            self.file_label = tk.Label(self.root, text=self.default_file_name)
+            self.file_label.grid(row=4, column=1, padx=10, pady=20, sticky='w')
+        else:
+            tk.Label(self.root, text='Exported Questions are used').grid(row=4, column=1, padx=10, sticky='w')
 
         # create submit button
         tk.Button(self.root, text='Submit', command=self.submit).grid(row=5, column=0, columnspan=2, padx=10, pady=50)
@@ -57,10 +66,12 @@ class UserInterface:
         if file_path:
             self.file_label.config(text=file_path)
 
-
     def submit(self):
         course_name = self.course_name_entry.get()
-        selected_file = self.file_label.cget('text')
+        if self.fileselection:
+            selected_file = self.file_label.cget('text')
+        else:
+            selected_file = None
         year = self.year_entry.get()
         chatbot_name = self.chatbot_name_entry.get()
         messages_per_day = self.msg_per_day_selected.get()
@@ -74,15 +85,17 @@ class UserInterface:
             messagebox.showerror('Input Error', 'Chatbot Name is mandatory.')
             return
         # Check File selected
-        if selected_file == self.default_file_name:
-            messagebox.showerror('Input Error', 'You need to select a file.')
-            return
-        # Check File has correct extension
-        valid_extensions = ('.xml', '.qti')
-        file_extension = os.path.splitext(selected_file)[1].lower()
-        if file_extension not in valid_extensions:
-            messagebox.showerror('Input Error', 'Only XML or QTI Files are valid.')
-            return
+        if self.fileselection:
+            if selected_file == self.default_file_name:
+                messagebox.showerror('Input Error', 'You need to select a file.')
+                return
+            # Check File has correct extension
+            valid_extensions = ('.xml', '.qti')
+            file_extension = os.path.splitext(selected_file)[1].lower()
+            if file_extension not in valid_extensions:
+                messagebox.showerror('Input Error', 'Only XML or QTI Files are valid.')
+                return
+
         # Create new transaction
         transaction = Transaction(course_name, year, chatbot_name, messages_per_day, selected_file)
         transaction.print()
