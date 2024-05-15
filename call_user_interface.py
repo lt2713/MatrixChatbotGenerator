@@ -1,5 +1,13 @@
 from classes.user_interface import UserInterface
+from structures.questions import Questions
+from classes.QTIParser import QTIParser
 
-ui = UserInterface()
-ui.loop()
+qti_parser = QTIParser()
+questions = qti_parser.get_questions()
+questions.print_short()
+
+
+
+# ui = UserInterface()
+# ui.loop()
 
