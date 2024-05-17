@@ -20,13 +20,13 @@ class Question:
         if not self.id:
             return False
         # Check for Type
-        if self.type not in self.valid_types():
+        if self.type.lower() not in self.valid_types_lower():
             return False
         # Check for text
         if not self.text or self.text == ' ':
             return False
         # Check if answers and type match
-        if self.type == 'Multiple Choice' or 'Multiple Correct':
+        if self.type == 'Multiple Choice' or self.type == 'Multiple Correct':
             if len(self.answers) < 2:
                 return False
             for answer in self.answers:
@@ -74,6 +74,10 @@ class Question:
     @staticmethod
     def valid_types():
         return ['Multiple Choice', 'Multiple Correct', 'Essay Question', 'True - False']
+
+    @staticmethod
+    def valid_types_lower():
+        return ['multiple choice', 'multiple correct', 'essay question', 'true - false']
 
 
 

@@ -1,6 +1,5 @@
-from classes.UserInterface import UserInterface
-from structures.questions import Questions
-from classes.QTIParser import QTIParser
+from MatrixChatbotGenerator.classes.UserInterface import UserInterface
+from MatrixChatbotGenerator.classes.QTIParser import QTIParser
 
 qti_parser = QTIParser()
 questions = qti_parser.get_questions()

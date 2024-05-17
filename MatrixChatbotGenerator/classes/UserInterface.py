@@ -103,7 +103,17 @@ class UserInterface:
 
         transaction = Transaction(course_name, year, chatbot_name, messages_per_day, selected_file)
         cg = ChatbotGenerator(transaction, self.questions)
-        cg.start()
+        if cg.start():
+            messagebox.showinfo('Success!', 'Chatbot created, info comming soon TODO')
+            self.clear_screen()
+
+    def clear_screen(self):
+        if self.fileselection:
+            self.default_file_name = "No file selected"
+        self.course_name_entry = ' '
+        self.year_entry = ' '
+        self.chatbot_name_entry = ' '
+        self.msg_per_day_dropdown.current(0)
 
     def loop(self):
         self.root.mainloop()
