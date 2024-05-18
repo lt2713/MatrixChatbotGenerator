@@ -48,9 +48,9 @@ class UserInterface:
         self.msg_per_day_dropdown.grid(row=3, column=1, padx=10, pady=5, sticky='w')
         self.msg_per_day_dropdown.current(0)  # Set default selection
 
+        self.default_file_name = "No file selected"
         # create select file button
         if self.fileselection:
-            self.default_file_name = "No file selected"
             tk.Button(self.root, text='Select File', command=self.select_file)\
                 .grid(row=4, column=0, padx=10, pady=20, sticky='w')
             self.file_label = tk.Label(self.root, text=self.default_file_name)
@@ -109,11 +109,12 @@ class UserInterface:
 
     def clear_screen(self):
         if self.fileselection:
-            self.default_file_name = "No file selected"
-        self.course_name_entry = ' '
-        self.year_entry = ' '
-        self.chatbot_name_entry = ' '
+            self.file_label.config(text=self.default_file_name)
+        self.course_name_entry.delete(0, tk.END)
+        self.year_entry.delete(0, tk.END)
+        self.chatbot_name_entry.delete(0, tk.END)
         self.msg_per_day_dropdown.current(0)
+        self.course_name_entry.focus_set()
 
     def loop(self):
         self.root.mainloop()
