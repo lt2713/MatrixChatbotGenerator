@@ -6,6 +6,7 @@ import os
 from MatrixChatbotGenerator.structures.transaction import Transaction
 from MatrixChatbotGenerator.classes.QTIParser import QTIParser
 from MatrixChatbotGenerator.classes.ChatbotGenerator import ChatbotGenerator
+from MatrixChatbotGenerator.classes.ConfigWindow import ConfigWindow
 
 
 class UserInterface:
@@ -23,6 +24,16 @@ class UserInterface:
         self.root.geometry("500x300")
         self.root.grid_columnconfigure(0, weight=1, minsize=150)
         self.root.grid_columnconfigure(1, weight=3, minsize=350)
+
+        # create menu bar
+        self.menu_bar = tk.Menu(self.root)
+        self.root.config(menu=self.menu_bar)
+        # create file menu
+        file_menu = tk.Menu(self.menu_bar, tearoff=0)
+        self.menu_bar.add_cascade(label="File", menu=file_menu)
+        file_menu.add_command(label="Edit Config", command=self.open_config_window)
+        file_menu.add_separator()
+        file_menu.add_command(label="Exit", command=self.root.quit)
 
         # create course name input field
         tk.Label(self.root, text='Course Name:').grid(row=0, column=0, padx=10, pady=5, sticky='w')
@@ -116,5 +127,17 @@ class UserInterface:
         self.msg_per_day_dropdown.current(0)
         self.course_name_entry.focus_set()
 
+    def open_config_window(self):
+        config_window = ConfigWindow()
+        config_window.loop()
+
     def loop(self):
-        self.root.mainloop()
+        try:
+            self.root.mainloop()
+        except Exception as e:
+            print(f'An error occurred in the main window: {e}')
+
+
+if __name__ == '__main__':
+    ui = UserInterface()
+    ui.loop()
