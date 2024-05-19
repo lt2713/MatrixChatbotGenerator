@@ -20,3 +20,6 @@ class Answer:
 
     def print_short(self):
         print(self.id + '\t' + self.text + '\t' + str(self.correct))
+
+    def get(self):
+        return self.id + ') ' + self.text + '\n'

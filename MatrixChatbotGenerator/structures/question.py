@@ -71,6 +71,14 @@ class Question:
             for feedback in self.feedback:
                 feedback.print_short()
 
+    def get(self):
+        result = self.text + '\n'
+        if len(self.answers) > 0:
+            for answer in self.answers:
+                result = result + answer.get()
+        return result
+
+
     @staticmethod
     def valid_types():
         return ['Multiple Choice', 'Multiple Correct', 'Essay Question', 'True - False']

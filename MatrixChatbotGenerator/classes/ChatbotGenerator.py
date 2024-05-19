@@ -19,5 +19,8 @@ class ChatbotGenerator:
             return False
         self.transaction.print()
         print(f'Number of questions: {self.questions.get_number_of_questions()}')
-        self.questions.print_short()
+        # self.questions.print_short()
+        print()
+        for question in self.questions.questions:
+            print(question.get())
         return True
