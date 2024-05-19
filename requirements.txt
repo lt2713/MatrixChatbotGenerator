@@ -1,0 +1,3 @@
+setuptools
+cryptography
+matrix-nio

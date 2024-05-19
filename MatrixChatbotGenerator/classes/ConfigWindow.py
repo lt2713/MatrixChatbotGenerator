@@ -23,10 +23,9 @@ class ConfigWindow:
         self.user_id_entry.grid(row=1, column=1, padx=10, pady=5)
         self.user_id_entry.insert(0,  self.config['Matrix'].get('user_id', ''))
 
-        tk.Label(self.root, text="Access Token:").grid(row=2, column=0, padx=10, pady=5)
-        self.access_token_entry = tk.Entry( self.root, width=40)
-        self.access_token_entry.grid(row=2, column=1, padx=10, pady=5)
-        self.access_token_entry.insert(0,  self.config['Matrix'].get('access_token', ''))
+        tk.Label(self.root, text="Password:").grid(row=2, column=0, padx=10, pady=5)
+        self.password_entry = tk.Entry(self.root, width=40, show="*")
+        self.password_entry.grid(row=2, column=1, padx=10, pady=5)
 
         tk.Button(self.root, text="Cancel", command=self.root.destroy).grid(row=3, column=0, padx=10,
                                                                             pady=10, sticky='e')
@@ -35,15 +34,16 @@ class ConfigWindow:
     def on_save(self):
         homeserver = self.homeserver_entry.get().strip()
         user_id = self.user_id_entry.get().strip()
-        access_token = self.access_token_entry.get().strip()
+        password = self.password_entry.get().strip()
 
-        if not homeserver or not user_id or not access_token:
+        if not homeserver or not user_id or not password:
             messagebox.showerror("Input Error", "All fields are required.")
             return
 
+        encrypted_password = ConfigManager.encrypt_password(password)
         self.config['Matrix']['homeserver'] = homeserver
         self.config['Matrix']['user_id'] = user_id
-        self.config['Matrix']['access_token'] = access_token
+        self.config['Matrix']['password'] = encrypted_password
         ConfigManager.save_config(self.config)
         messagebox.showinfo("Success", "Configuration saved successfully.")
         self.root.destroy()
