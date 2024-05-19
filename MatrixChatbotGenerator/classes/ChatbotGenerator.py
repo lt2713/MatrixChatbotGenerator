@@ -1,9 +1,14 @@
-from MatrixChatbotGenerator.structures.transaction import Transaction
-from MatrixChatbotGenerator.structures.questions import Questions
+from structures.questions import Questions
+from classes.QTIParser import QTIParser
+from structures.transaction import Transaction
 
 
 class ChatbotGenerator:
     def __init__(self, transaction, questions):
+        print(transaction)
+        print(questions)
+        print(type(transaction))
+        print(type(questions))
         if isinstance(transaction, Transaction):
             self.transaction = transaction
         else:
@@ -17,10 +22,17 @@ class ChatbotGenerator:
         if not self.transaction or not self.questions:
             print('Chatbot generation failed!')
             return False
-        self.transaction.print()
-        print(f'Number of questions: {self.questions.get_number_of_questions()}')
-        # self.questions.print_short()
-        print()
-        for question in self.questions.questions:
-            print(question.get())
         return True
+
+
+if __name__ == '__main__':
+    qtiparser = QTIParser('lt_testquiz.xml')
+    default_questions = qtiparser.get_questions()
+    default_transaction = Transaction('Test', 1, 'lt_testquiz.xml')
+    cg = ChatbotGenerator(default_transaction, default_questions)
+    if cg.start():
+        print('yay')
+    else:
+        print('nay')
+
+

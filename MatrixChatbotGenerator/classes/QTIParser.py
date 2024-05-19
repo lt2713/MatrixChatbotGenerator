@@ -1,8 +1,8 @@
 import xml.etree.ElementTree as ET
-from MatrixChatbotGenerator.structures.questions import Questions
-from MatrixChatbotGenerator.structures.question import Question
-from MatrixChatbotGenerator.structures.answer import Answer
-from MatrixChatbotGenerator.structures.feedback import Feedback
+from structures.questions import Questions
+from structures.question import Question
+from structures.answer import Answer
+from structures.feedback import Feedback
 
 
 class QTIParser:

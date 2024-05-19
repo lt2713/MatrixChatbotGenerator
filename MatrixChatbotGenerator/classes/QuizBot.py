@@ -1,10 +1,13 @@
 from classes.ChatbotConfig import ChatbotConfig
 from classes.ConfigManager import ConfigManager
+from structures.transaction import Transaction
+from structures.questions import Questions
 from nio import AsyncClient, MatrixRoom, RoomMessageText, SyncResponse, LoginResponse, InviteMemberEvent, MegolmEvent
 import asyncio
 import logging
 import json
 import os
+import signal
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
@@ -12,15 +15,17 @@ logger = logging.getLogger(__name__)
 
 
 class Quizbot:
-    def __init__(self):
+    def __init__(self, transaction, questions):
+        self.transaction = transaction
+        self.questions = questions
         self.config = ChatbotConfig()
         self.homeserver = self.config.get_homeserver()
         self.user = self.config.get_user_id()
         encrypted_password = self.config.get_password()
+
         self.password = ConfigManager.decrypt_password(encrypted_password)
-        # self.client = AsyncClient(self.homeserver, self.user)
-        self.store_path = "store/"
-        self.client = AsyncClient(self.homeserver, self.user, store_path=self.store_path)
+        self.client = AsyncClient(self.homeserver, self.user)
+
         self.config.print()
 
         # Path to store the next_batch token
@@ -34,34 +39,6 @@ class Quizbot:
             content={"msgtype": "m.text", "body": message}
         )
 
-    async def login(self):
-        response = await self.client.login(self.password)
-        if isinstance(response, LoginResponse):
-            print("Login successful!")
-        else:
-            print("Login failed!")
-
-    def load_next_batch(self):
-        """Load the next_batch token from a file."""
-        if os.path.exists(self.next_batch_file):
-            with open(self.next_batch_file, 'r') as file:
-                data = json.load(file)
-                self.client.next_batch = data.get('next_batch', None)
-                logger.info(f"Loaded next_batch token: {self.client.next_batch}")
-
-    def save_next_batch(self, next_batch):
-        """Save the next_batch token to a file."""
-        with open(self.next_batch_file, 'w') as file:
-            json.dump({'next_batch': next_batch}, file)
-            logger.info(f"Saved next_batch token: {next_batch}")
-
-    async def sync_callback(self, response: SyncResponse):
-        if isinstance(response, SyncResponse):
-            self.save_next_batch(response.next_batch)
-            logger.info("Sync completed successfully.")
-        else:
-            logger.error("Sync failed.")
-
     def process_message(self, message):
         if message.lower().startswith("quiz"):
             return "Let's start the quiz!"
@@ -70,11 +47,18 @@ class Quizbot:
 
     async def message_callback(self, room: MatrixRoom, event):
         if event.sender != self.user:
+            logger.info(f"Received message from user: {event.sender}")
             if isinstance(event, MegolmEvent):
                 # Decrypt the MegolmEvent to get the plaintext message
-                message = event.parse_encrypted_event()
-                print(message)
-                print('Event detected')
+                # message = event.parse_encrypted_event()
+                # print(message)
+                message = ' '
+                if event.decrypted:
+                    message = event.body
+                else:
+                    message = ' '
+                    logger.error(f"Encrypted messages are not supported")
+                    return
             elif isinstance(event, RoomMessageText):
                 message = event.body
             else:
@@ -102,10 +86,63 @@ class Quizbot:
         except Exception as e:
             logger.error(f"Error during sync: {e}")
 
+    async def login(self):
+        response = await self.client.login(self.password)
+        if isinstance(response, LoginResponse):
+            print("Login successful!")
+        else:
+            print("Login failed!")
+
+    def load_next_batch(self):
+        """Load the next_batch token from a file."""
+        if os.path.exists(self.next_batch_file):
+            with open(self.next_batch_file, 'r') as file:
+                data = json.load(file)
+                self.client.next_batch = data.get('next_batch', None)
+                logger.info(f"Loaded next_batch token: {self.client.next_batch}")
+
+    def save_next_batch(self, next_batch):
+        """Save the next_batch token to a file."""
+        with open(self.next_batch_file, 'w') as file:
+            json.dump({'next_batch': next_batch}, file)
+            # logger.info(f"Saved next_batch token: {next_batch}")
+
+    async def sync_callback(self, response: SyncResponse):
+        if isinstance(response, SyncResponse):
+            self.save_next_batch(response.next_batch)
+            # logger.info("Sync completed successfully.")
+        else:
+            logger.error("Sync failed.")
+
+    async def close(self):
+        logger.info("Closing client session...")
+        await self.client.close()
+        logger.info("Client session closed.")
+
+
+def handle_exit(signum, frame, bot, loop):
+    logger.info("Signal received, exiting...")
+    loop.create_task(bot.close())
+    # Delay stopping the loop to give the close task time to finish
+    loop.call_soon(loop.stop)
+
 
 async def main():
     quizbot = Quizbot()
+
+    loop = asyncio.get_event_loop()
+
+    # Register signal handlers
+    for sig in (signal.SIGINT, signal.SIGTERM):
+        signal.signal(sig, lambda s, f: handle_exit(s, f, quizbot, loop))
+
     await quizbot.run()
+
+    # Give time for pending tasks to complete
+    pending = asyncio.all_tasks(loop)
+    if pending:
+        await asyncio.gather(*pending, return_exceptions=True)
+
 
 if __name__ == '__main__':
     asyncio.run(main())
