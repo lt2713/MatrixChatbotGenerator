@@ -28,7 +28,6 @@ class QTIParser:
             print(f'An unexpected error occurred while trying to read the file:{e}')
             return None
 
-
     def find_questions(self):
         questions = []
         for item in self.tree.findall('.//item'):
@@ -89,6 +88,7 @@ class QTIParser:
                         return new_answer
         else:
             print("No text found for answer")
+
     def find_model_answer(self, item, question):
         model_answer = item.find('.//response_label/material/mattext').text
         feedback = Feedback('Model', model_answer)
@@ -105,7 +105,6 @@ class QTIParser:
             if feedback:
                 question.feedback.append(feedback)
 
-
     def find_feedback(self, itemfeedback):
         # Get the ident attribute value
         ident = itemfeedback.get('ident')
@@ -115,7 +114,6 @@ class QTIParser:
             text_content = mattext_element.text
             if text_content is not None:
                 return Feedback(ident, text_content)
-
 
     def get_questions(self):
         return self.questions
