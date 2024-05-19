@@ -2,17 +2,13 @@ import tkinter as tk
 from tkinter import messagebox
 import configparser
 import os
-
-# Determine the absolute path of the configuration file
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-CONFIG_FILE = os.path.join(BASE_DIR, 'config.ini')
+from classes.ConfigManager import ConfigManager
 
 
 class ConfigWindow:
 
     def __init__(self):
-        self.config_file = CONFIG_FILE
-        self.config = self.load_config()
+        self.config = ConfigManager.load_config()
 
         self.root = tk.Tk()
         self.root.title("Matrix Bot Configuration")
@@ -36,20 +32,6 @@ class ConfigWindow:
                                                                             pady=10, sticky='e')
         tk.Button(self.root, text="Save", command=self.on_save).grid(row=3, column=1, padx=10, pady=10, sticky='w')
 
-    def load_config(self):
-        config = configparser.ConfigParser()
-        if os.path.exists(self.config_file):
-            config.read(self.config_file)
-        else:
-            config['Matrix'] = {'homeserver': '', 'user_id': '', 'access_token': ''}
-            with open(self.config_file, 'w') as configfile:
-                config.write(configfile)
-        return config
-
-    def save_config(self):
-        with open(self.config_file, 'w') as configfile:
-            self.config.write(configfile)
-
     def on_save(self):
         homeserver = self.homeserver_entry.get().strip()
         user_id = self.user_id_entry.get().strip()
@@ -62,7 +44,7 @@ class ConfigWindow:
         self.config['Matrix']['homeserver'] = homeserver
         self.config['Matrix']['user_id'] = user_id
         self.config['Matrix']['access_token'] = access_token
-        self.save_config()
+        ConfigManager.save_config(self.config)
         messagebox.showinfo("Success", "Configuration saved successfully.")
         self.root.destroy()
 
