@@ -3,11 +3,15 @@ from tkinter import messagebox
 import configparser
 import os
 
+# Determine the absolute path of the configuration file
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+CONFIG_FILE = os.path.join(BASE_DIR, 'config.ini')
+
 
 class ConfigWindow:
 
     def __init__(self):
-        self.config_file = 'config.ini'
+        self.config_file = CONFIG_FILE
         self.config = self.load_config()
 
         self.root = tk.Tk()
