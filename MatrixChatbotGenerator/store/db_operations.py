@@ -1,7 +1,7 @@
-from models import Base, User, Quiz, Question as DbQuestion, Answer, Feedback, LastQuestion
+from store.models import Base, User, Quiz, Question as DbQuestion, Answer, Feedback, LastQuestion
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-import db_config
+from store import db_config
 from structures.question import Question
 
 
@@ -17,23 +17,13 @@ def add_custom_question_to_db(question, quiz_id):
     session.commit()
 
 
-if __name__ == "__main__":
-    # Example usage
-    custom_question = Question(
-        identifier="Q1",
-        question_type="multiple_choice",
-        text="What is 2 + 2?",
-        answers=[
-            {"identifier": "A", "text": "3", "correct": False},
-            {"identifier": "B", "text": "4", "correct": True}
-        ],
-        feedback=[
-            {"identifier": "A", "text": "Incorrect, 2 + 2 is 4"},
-            {"identifier": "B", "text": "Correct, 2 + 2 is 4"}
-        ]
-    )
+def fetch_all_quizzes():
+    # Query the database to get all quizzes
+    quizzes = session.query(Quiz).all()
+    return quizzes
 
-    # Assume quiz_id is provided or obtained from somewhere
-    quiz_id = "quiz1"
-    custom_question.print_short()
-    add_custom_question_to_db(custom_question, quiz_id=quiz_id)
+
+if __name__ == '__main__':
+    quizzes = fetch_all_quizzes()
+    for quiz in quizzes:
+        print(quiz.name)

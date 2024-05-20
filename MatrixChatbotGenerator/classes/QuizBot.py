@@ -2,6 +2,7 @@ from classes.ChatbotConfig import ChatbotConfig
 from classes.ConfigManager import ConfigManager
 from structures.transaction import Transaction
 from structures.questions import Questions
+from store.db_operations import *
 from nio import AsyncClient, MatrixRoom, RoomMessageText, SyncResponse, LoginResponse, InviteMemberEvent, MegolmEvent
 import asyncio
 import logging
@@ -42,10 +43,12 @@ class Quizbot:
     def process_message(self, message):
         message_lower = message.lower()
         words = message_lower.split()
-        if message.lower().startswith("quiz"):
-            return "Let's start the quiz!"
-        elif words[0] in ('help', '!help'):
+        if message.lower().startswith('hello'):
+            return "Hello!"
+        elif words[0] in ('help', '!help') and len(words) == 1:
             return self.message_help()
+        elif words[0] in ('quizzes', 'quizzes') and len(words) == 1:
+            return self.message_quizzes()
         else:
             return "I didn't understand that. Type 'quiz' to start."
 
@@ -59,6 +62,15 @@ class Quizbot:
                 '!unsubscribe &quiz \t\t unsubscribe from given quiz\n'
                 '!nextquestion &quiz \t\t get the next question from given quiz\n'
                 )
+
+    def message_quizzes(self):
+        quizzes = fetch_all_quizzes()
+        if len(quizzes) == 0:
+            return 'There are no quizzes available.'
+        result = 'These are the available quizzes:\n'
+        for quiz in quizzes:
+            result = quiz.name + '\n'
+        return result
 
     async def message_callback(self, room: MatrixRoom, event):
         if event.sender != self.user:
