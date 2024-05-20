@@ -15,9 +15,9 @@ logger = logging.getLogger(__name__)
 
 
 class Quizbot:
-    def __init__(self, transaction, questions):
-        self.transaction = transaction
-        self.questions = questions
+    def __init__(self, transaction=None, questions=None):
+        self.transaction = transaction if transaction else None
+        self.questions = questions if questions else None
         self.config = ChatbotConfig()
         self.homeserver = self.config.get_homeserver()
         self.user = self.config.get_user_id()
@@ -40,10 +40,25 @@ class Quizbot:
         )
 
     def process_message(self, message):
+        message_lower = message.lower()
+        words = message_lower.split()
         if message.lower().startswith("quiz"):
             return "Let's start the quiz!"
+        elif words[0] in ('help', '!help'):
+            return self.message_help()
         else:
             return "I didn't understand that. Type 'quiz' to start."
+
+    @staticmethod
+    def message_help():
+        return ('Hello, I am the Quizbot. Try out one of the following commands: \n'
+                '!help \t\t\t\t\t show the help menu\n'
+                '!quizzes \t\t\t\t\t show available quizzes\n'
+                '!subscribed \t\t\t\t show subscribed quizzes\n'
+                '!subscribe &quiz \t\t\t subscribe to given quiz\n'
+                '!unsubscribe &quiz \t\t unsubscribe from given quiz\n'
+                '!nextquestion &quiz \t\t get the next question from given quiz\n'
+                )
 
     async def message_callback(self, room: MatrixRoom, event):
         if event.sender != self.user:
