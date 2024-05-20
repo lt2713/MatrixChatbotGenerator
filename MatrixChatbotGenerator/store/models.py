@@ -37,6 +37,7 @@ class Quiz(Base):
 class Question(Base):
     __tablename__ = 'question'
     id = Column(String, primary_key=True)
+    identifier = Column(String)
     type = Column(String)
     text = Column(String)
     quiz_id = Column(String, ForeignKey('quiz.id'))

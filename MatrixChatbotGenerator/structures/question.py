@@ -1,4 +1,7 @@
 import uuid
+from structures.answer import Answer
+from structures.feedback import Feedback
+from store.models import Question as DbQuestion
 
 
 class Question:
@@ -7,8 +10,8 @@ class Question:
         self.identifier = identifier
         self.type = question_type
         self.text = text if text else ' '
-        self.answers = answers if answers else []
-        self.feedback = feedback if feedback else []
+        self.answers = [Answer(**ans) if isinstance(ans, dict) else ans for ans in (answers or [])]
+        self.feedback = [Feedback(**fb) if isinstance(fb, dict) else fb for fb in (feedback or [])]
 
     def validate(self):
         # Check for ID
@@ -72,6 +75,18 @@ class Question:
             for answer in self.answers:
                 result = result + answer.get()
         return result
+
+    def to_db_model(self, quiz_id):
+        question = DbQuestion(
+            id=self.id,
+            identifier=self.identifier,
+            type=self.type,
+            text=self.text,
+            quiz_id=quiz_id
+        )
+        question.answers = [answer.to_db_model(question.id) for answer in self.answers]
+        question.feedback = [feedback.to_db_model(question.id) for feedback in self.feedback]
+        return question
 
     @staticmethod
     def valid_types():

@@ -1,4 +1,5 @@
 import uuid
+from store.models import Answer as DbAnswer
 
 
 class Answer:
@@ -27,3 +28,12 @@ class Answer:
 
     def get(self):
         return self.identifier + ') ' + self.text + '\n'
+
+    def to_db_model(self, question_id):
+        return DbAnswer(
+            id=self.id,
+            identifier=self.identifier,
+            text=self.text,
+            is_correct=self.correct,
+            question_id=question_id
+        )
