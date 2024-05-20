@@ -1,4 +1,4 @@
-from sqlalchemy import create_engine, Column, String, Boolean, ForeignKey, Table
+from sqlalchemy import create_engine, Column, String, Boolean, ForeignKey, Table, Integer
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship, sessionmaker
 
@@ -29,6 +29,7 @@ class Quiz(Base):
     __tablename__ = 'quiz'
     id = Column(String, primary_key=True)
     name = Column(String)
+    messages_per_day = Column(Integer)
 
     questions = relationship("Question", back_populates="quiz")
     users = relationship("User", secondary=user_subscribed_to_set, back_populates="quizzes")

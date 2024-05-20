@@ -50,7 +50,7 @@ class Quizbot:
         elif words[0] in ('quizzes', 'quizzes') and len(words) == 1:
             return self.message_quizzes()
         else:
-            return "I didn't understand that. Type 'quiz' to start."
+            return "I didn't understand that. Type '!help' to see what I can understand."
 
     @staticmethod
     def message_help():
@@ -67,9 +67,9 @@ class Quizbot:
         quizzes = fetch_all_quizzes()
         if len(quizzes) == 0:
             return 'There are no quizzes available.'
-        result = 'These are the available quizzes:\n'
+        result = 'Enter "!subscribe &quiz" to subscribe to a Quiz.\nThese are the available quizzes:\n'
         for quiz in quizzes:
-            result = quiz.name + '\n'
+            result += '- ' + quiz.name + '\n'
         return result
 
     async def message_callback(self, room: MatrixRoom, event):
