@@ -1,23 +1,18 @@
+import uuid
+
+
 class Question:
-    def __init__(self, identifier, question_type, text=None, answers=None, feedback=None):
-        self.id = identifier
+    def __init__(self, identifier, question_type, text=None, answers=None, feedback=None, key=None):
+        self.id = key if key else uuid.uuid4()
+        self.identifier = identifier
         self.type = question_type
-        if text is None:
-            self.text = ' '
-        else:
-            self.text = text
-        if answers is None:
-            self.answers = []
-        else:
-            self.answers = answers
-        if feedback is None:
-            self.feedback = []
-        else:
-            self.feedback = feedback
+        self.text = text if text else ' '
+        self.answers = answers if answers else []
+        self.feedback = feedback if feedback else []
 
     def validate(self):
         # Check for ID
-        if not self.id:
+        if not self.identifier:
             return False
         # Check for Type
         if self.type.lower() not in self.valid_types_lower():
@@ -48,7 +43,7 @@ class Question:
         return True
 
     def print(self):
-        print(f'Question id: {self.id}')
+        print(f'Question id: {self.identifier}')
         print(f'type {self.type}')
         print(f'text: {self.text}')
         if len(self.answers) > 0:
@@ -61,7 +56,7 @@ class Question:
                 feedback.print()
 
     def print_short(self):
-        print('Question ' + self.id + '\t' + self.type + '\t' + self.text)
+        print('Question ' + self.identifier + '\t' + self.type + '\t' + self.text)
         if len(self.answers) > 0:
             print('Answers:')
             for answer in self.answers:
@@ -77,7 +72,6 @@ class Question:
             for answer in self.answers:
                 result = result + answer.get()
         return result
-
 
     @staticmethod
     def valid_types():

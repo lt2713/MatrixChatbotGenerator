@@ -1,6 +1,10 @@
+import uuid
+
+
 class Answer:
-    def __init__(self, identifier, text, correct):
-        self.id = identifier
+    def __init__(self, identifier, text, correct, key=None):
+        self.id = key if key else uuid.uuid4()
+        self.identifier = identifier
         self.text = text
         self.correct = correct
 
@@ -14,12 +18,12 @@ class Answer:
         return True
 
     def print(self):
-        print(f'id: {self.id}')
+        print(f'id: {self.identifier}')
         print(f'text: {self.text}')
         print(f'correct: {self.correct}')
 
     def print_short(self):
-        print(self.id + '\t' + self.text + '\t' + str(self.correct))
+        print(self.identifier + '\t' + self.text + '\t' + str(self.correct))
 
     def get(self):
-        return self.id + ') ' + self.text + '\n'
+        return self.identifier + ') ' + self.text + '\n'

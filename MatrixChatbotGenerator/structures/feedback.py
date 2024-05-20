@@ -1,17 +1,18 @@
+import uuid
+
+
 class Feedback:
-    def __init__(self, identifier, text):
-        self.id = identifier
-        if text is None:
-            self.text = ' '
-        else:
-            self.text = text
+    def __init__(self, identifier, text, key=None):
+        self.id = key if key else uuid.uuid4()
+        self.identifier = identifier
+        self.text = text if text else ' '
 
     def validate(self):
         return True
 
     def print(self):
-        print(f'id: {self.id}')
+        print(f'id: {self.identifier}')
         print(f'text: {self.text}')
 
     def print_short(self):
-        print(self.id + '\t' + self.text)
+        print(self.identifier + '\t' + self.text)
