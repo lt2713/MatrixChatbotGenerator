@@ -1,6 +1,7 @@
 from structures.questions import Questions
 from classes.QTIParser import QTIParser
 from structures.transaction import Transaction
+from classes.QuizBot import Quizbot
 
 
 class ChatbotGenerator:
@@ -22,7 +23,8 @@ class ChatbotGenerator:
         if not self.transaction or not self.questions:
             print('Chatbot generation failed!')
             return False
-        return True
+        qb = Quizbot(self.transaction, self.questions)
+        qb.run()
 
 
 if __name__ == '__main__':
@@ -31,8 +33,5 @@ if __name__ == '__main__':
     default_transaction = Transaction('Test', 1, 'lt_testquiz.xml')
     cg = ChatbotGenerator(default_transaction, default_questions)
     if cg.start():
-        print('yay')
-    else:
-        print('nay')
-
+        print('Chatbot generated')
 
