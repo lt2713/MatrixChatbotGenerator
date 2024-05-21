@@ -30,7 +30,7 @@ class Quizbot:
         self.config.print()
 
         # Path to store the next_batch token
-        self.next_batch_file = 'next_batch_token.json'
+        self.next_batch_file = '../data/next_batch_token.json'
         self.load_next_batch()
 
     async def send_message(self, room_id, message):
@@ -61,6 +61,8 @@ class Quizbot:
             return self.next_question(parameter, room_id)
         elif command in ('delete', '!delete'):
             return self.delete_quiz(parameter)
+        elif has_open_question(room_id):
+            return self.process_answer(room_id, message)
         else:
             return "I didn't understand that. Type '!help' to see what I can understand."
 
@@ -100,11 +102,27 @@ class Quizbot:
         quiz_id = get_quiz_id_by_name(quiz_name)
         if not is_user_subscribed(room_id, quiz_id):
             return f'You are not subscribed to the Quiz "{quiz_name}".'
+        if has_open_question(room_id):
+            return 'You still have an open question. Please try to answer that first.'
         question = get_unanswered_question(room_id, quiz_id)
         if question:
-            return question.text
+            return self.ask_question(quiz_name, room_id, question)
         else:
             return 'There is no question left i could ask you.'
+
+    def ask_question(self, quiz_id, room_id, db_question):
+        question = convert_question_model_to_question(db_question)
+        if ask_question_to_user(room_id, quiz_id, question.id):
+            return question.get()
+        else:
+            return 'There was an unexpected error trying to ask a question.'
+
+    def process_answer(self, room_id, message):
+        open_question = get_open_question(room_id)
+        question = convert_question_model_to_question(open_question)
+        if question.type == 'Essay Question':
+            answer = 'Thanks for answering the open question.'
+            #if question.feedback
 
     def unsubscribe(self, quiz_name, room_id):
         quiz_id = get_quiz_id_by_name(quiz_name)

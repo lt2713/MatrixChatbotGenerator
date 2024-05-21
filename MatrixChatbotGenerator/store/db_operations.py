@@ -5,6 +5,7 @@ from sqlalchemy.orm import sessionmaker
 from store import db_config
 from structures.question import Question
 from structures.transaction import Transaction
+from datetime import datetime
 
 
 # Initialize the database connection
@@ -94,8 +95,6 @@ def unsubscribe_user_from_quiz(user_id, quiz_id):
             return False
     else:
         return False
-
-
     return True
 
 
@@ -143,6 +142,90 @@ def get_unanswered_question(user_id, quiz_id):
     subquery = session.query(user_answered_question.c.question_id).filter_by(user_id=user_id).subquery()
     question = session.query(DbQuestion).filter(DbQuestion.quiz_id == quiz_id, ~DbQuestion.id.in_(subquery)).first()
     return question
+
+
+def convert_question_model_to_question(db_question):
+    answers = [
+        Answer(id=ans.id, identifier=ans.identifier, text=ans.text, is_correct=ans.is_correct)
+        for ans in db_question.answers
+    ]
+    feedback = [
+        Feedback(id=fb.id, identifier=fb.identifier, text=fb.text)
+        for fb in db_question.feedback
+    ]
+    question = Question(
+        identifier=db_question.identifier,
+        question_type=db_question.type,
+        text=db_question.text,
+        answers=answers,
+        feedback=feedback,
+        key=db_question.id
+    )
+    return question
+
+
+def update_last_question(user_id, quiz_id, question_id, answered=False):
+    session = Session()
+    try:
+        last_question = session.query(LastQuestion).filter_by(user_id=user_id, quiz_id=quiz_id,
+                                                              question_id=question_id).first()
+        if last_question:
+            last_question.question_id = question_id
+            last_question.answered = answered
+            if answered:
+                last_question.answered_ts = datetime.now()
+            else:
+                last_question.asked_ts = datetime.now()
+        else:
+            last_question = LastQuestion(
+                user_id=user_id,
+                quiz_id=quiz_id,
+                question_id=question_id,
+                answered=answered,
+                asked_ts=datetime.now() if not answered else None,
+                answered_ts=datetime.now() if answered else None
+            )
+            session.add(last_question)
+
+        session.commit()
+    except Exception as e:
+        session.rollback()
+        print(f"An error occurred: {e}")
+
+
+def update_user_answered_question(user_id, question_id):
+    exists = session.query(user_answered_question).filter_by(user_id=user_id, question_id=question_id).count() > 0
+    if not exists:
+        stmt = user_answered_question.insert().values(user_id=user_id, question_id=question_id)
+        session.execute(stmt)
+        session.commit()
+
+
+def ask_question_to_user(user_id, quiz_id, question_id):
+    try:
+        update_last_question(user_id, quiz_id, question_id)
+        update_user_answered_question(user_id, question_id)
+    except Exception as e:
+        session.rollback()
+        print(e)
+        return False
+    return True
+
+
+def get_open_question(user_id, quiz_id=None):
+    try:
+        query = session.query(LastQuestion).filter_by(user_id=user_id, answered=False)
+        if quiz_id:
+            query = query.filter_by(quiz_id=quiz_id)
+        open_question = query.first()
+        return open_question.question_id if open_question else None
+    except Exception as e:
+        print(f"An error occurred: {e}")
+        return None
+
+
+def has_open_question(user_id, quiz_id=None):
+    return True if get_open_question(user_id, quiz_id) is not None else False
 
 
 if __name__ == '__main__':
