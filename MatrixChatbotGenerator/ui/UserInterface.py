@@ -6,7 +6,7 @@ import os
 from structures.transaction import Transaction
 from classes.QTIParser import QTIParser
 from classes.ChatbotGenerator import ChatbotGenerator
-from classes.ConfigWindow import ConfigWindow
+from ui.ConfigWindow import ConfigWindow
 
 
 class UserInterface:

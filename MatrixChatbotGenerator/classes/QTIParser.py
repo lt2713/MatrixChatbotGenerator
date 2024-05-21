@@ -8,7 +8,7 @@ from structures.feedback import Feedback
 class QTIParser:
     def __init__(self, file=None):
         if not file:
-            self.file = 'classes/lt_testquiz.xml'
+            self.file = '../data/lt_testquiz.xml'
         else:
             self.file = file
         self.questions = Questions()

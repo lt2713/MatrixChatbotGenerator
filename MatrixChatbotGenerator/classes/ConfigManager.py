@@ -2,10 +2,9 @@ import configparser
 import os
 from cryptography.fernet import Fernet
 
-# Determine the absolute path of the configuration file
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-CONFIG_FILE = os.path.join(BASE_DIR, 'config.ini')
-KEY_FILE = os.path.join(BASE_DIR, 'secret.key')
+# Paths to the config and key files
+CONFIG_FILE = '../data/config.ini'
+KEY_FILE = '../secret.key'
 
 
 class ConfigManager:

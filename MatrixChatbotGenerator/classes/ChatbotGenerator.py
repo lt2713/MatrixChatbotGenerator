@@ -22,7 +22,7 @@ class ChatbotGenerator:
         self.message = ' '
 
     def start(self):
-        if not self.transaction or not self.questions:
+        if not self.transaction or not self.questions or len(self.questions.questions) == 0:
             self.message = 'Chatbot generation failed! Parameter Error.'
             return False
         if quiz_exists(self.transaction.quiz_name):
@@ -43,9 +43,9 @@ class ChatbotGenerator:
 
 
 if __name__ == '__main__':
-    qtiparser = QTIParser('lt_testquiz.xml')
+    qtiparser = QTIParser('../data/lt_testquiz.xml')
     default_questions = qtiparser.get_questions()
-    default_transaction = Transaction('Letos Testquiz', 1, 'lt_testquiz.xml')
+    default_transaction = Transaction('Letos Testquiz', 1, '../data/lt_testquiz.xml')
     cg = ChatbotGenerator(default_transaction, default_questions)
     cg.start()
     print(cg.get_message())
