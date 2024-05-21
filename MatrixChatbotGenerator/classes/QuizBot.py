@@ -58,16 +58,16 @@ class Quizbot:
                 '!help \t\t\t\t\t show the help menu\n'
                 '!quizzes \t\t\t\t\t show available quizzes\n'
                 '!subscribed \t\t\t\t show subscribed quizzes\n'
-                '!subscribe &quiz \t\t\t subscribe to given quiz\n'
-                '!unsubscribe &quiz \t\t unsubscribe from given quiz\n'
-                '!nextquestion &quiz \t\t get the next question from given quiz\n'
+                '!subscribe quiz_name\t\t subscribe to given quiz\n'
+                '!unsubscribe quiz_name\t unsubscribe from given quiz\n'
+                '!nextquestion quiz_name\t get the next question from given quiz\n'
                 )
 
     def message_quizzes(self):
         quizzes = fetch_all_quizzes()
         if len(quizzes) == 0:
             return 'There are no quizzes available.'
-        result = 'Enter "!subscribe &quiz" to subscribe to a Quiz.\nThese are the available quizzes:\n'
+        result = 'Enter "!subscribe quiz_name" to subscribe to a Quiz.\nThese are the available quizzes:\n'
         for quiz in quizzes:
             result += '- ' + quiz.name + '\n'
         return result
