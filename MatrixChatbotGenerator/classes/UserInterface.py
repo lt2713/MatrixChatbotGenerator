@@ -103,9 +103,10 @@ class UserInterface:
             messagebox.showinfo('Success!', 'Chatbot created, info comming soon TODO')
             self.clear_screen()
         else:
-            print('error')
+            print('error ' + cg.get_message())
             print(f'transaction {transaction.print()}')
             print(f'questions {self.questions.print_short()}')
+            messagebox.showerror('Error!', cg.get_message())
 
     def clear_screen(self):
         if self.fileselection:
