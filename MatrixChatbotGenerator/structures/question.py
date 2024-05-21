@@ -6,7 +6,7 @@ from store.models import Question as DbQuestion
 
 class Question:
     def __init__(self, identifier, question_type, text=None, answers=None, feedback=None, key=None):
-        self.id = key if key else uuid.uuid4()
+        self.id = key if key else str(uuid.uuid4())
         self.identifier = identifier
         self.type = question_type
         self.text = text if text else ' '

@@ -4,7 +4,7 @@ from store.models import Feedback as DbFeedback
 
 class Feedback:
     def __init__(self, identifier, text, key=None):
-        self.id = key if key else uuid.uuid4()
+        self.id = key if key else str(uuid.uuid4())
         self.identifier = identifier
         self.text = text if text else ' '
 

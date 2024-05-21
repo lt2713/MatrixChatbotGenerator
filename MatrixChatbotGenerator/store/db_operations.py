@@ -3,6 +3,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from store import db_config
 from structures.question import Question
+from structures.transaction import Transaction
 
 
 # Initialize the database connection
@@ -14,6 +15,12 @@ session = Session()
 def add_custom_question_to_db(question, quiz_id):
     question_model = question.to_db_model(quiz_id=quiz_id)
     session.add(question_model)
+    session.commit()
+
+
+def add_transaction_as_quiz_to_db(transaction):
+    quiz_model = transaction.to_db_model()
+    session.add(quiz_model)
     session.commit()
 
 
