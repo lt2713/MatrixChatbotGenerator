@@ -75,7 +75,7 @@ class LastQuestion(Base):
     __tablename__ = 'last_question'
     user_id = Column(String, ForeignKey('user.id'), primary_key=True)
     quiz_id = Column(String, ForeignKey('quiz.id'), primary_key=True)
-    question_id = Column(String, ForeignKey('question.id'), primary_key=True)
+    question_id = Column(String, ForeignKey('question.id'))
     answered = Column(Boolean)
     asked_ts = Column(DateTime)
     answered_ts = Column(DateTime)

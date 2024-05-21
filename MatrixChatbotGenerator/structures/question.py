@@ -63,7 +63,8 @@ class Question:
         if len(self.answers) > 0:
             print('Answers:')
             for answer in self.answers:
-                answer.print_short()
+                if isinstance(answer, Answer):
+                    answer.print_short()
         if len(self.feedback) > 0:
             print('Feedback:')
             for feedback in self.feedback:

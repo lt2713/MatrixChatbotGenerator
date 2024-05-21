@@ -7,10 +7,6 @@ from store.db_operations import *
 
 class ChatbotGenerator:
     def __init__(self, transaction, questions):
-        print(transaction)
-        print(questions)
-        print(type(transaction))
-        print(type(questions))
         if isinstance(transaction, Transaction):
             self.transaction = transaction
         else:

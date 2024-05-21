@@ -1,3 +1,5 @@
+import re
+
 from classes.ChatbotConfig import ChatbotConfig
 from classes.ConfigManager import ConfigManager
 from structures.transaction import Transaction
@@ -61,6 +63,8 @@ class Quizbot:
             return self.next_question(parameter, room_id)
         elif command in ('delete', '!delete'):
             return self.delete_quiz(parameter)
+        elif command in ('reset', '!reset'):
+            return self.reset_quiz(parameter, room_id)
         elif has_open_question(room_id):
             return self.process_answer(room_id, message)
         else:
@@ -75,6 +79,7 @@ class Quizbot:
                 '!subscribe quiz_name\t\t subscribe to given quiz\n'
                 '!unsubscribe quiz_name\t unsubscribe from given quiz\n'
                 '!nextquestion quiz_name\t get the next question from given quiz\n'
+                '!reset quiz_name\t\t\t reset the quiz for me \n'
                 '!delete quiz_name\t\t\t delete the quiz\n'
                 )
 
@@ -106,7 +111,7 @@ class Quizbot:
             return 'You still have an open question. Please try to answer that first.'
         question = get_unanswered_question(room_id, quiz_id)
         if question:
-            return self.ask_question(quiz_name, room_id, question)
+            return self.ask_question(quiz_id, room_id, question)
         else:
             return 'There is no question left i could ask you.'
 
@@ -120,9 +125,71 @@ class Quizbot:
     def process_answer(self, room_id, message):
         open_question = get_open_question(room_id)
         question = convert_question_model_to_question(open_question)
+        response = ' '
         if question.type == 'Essay Question':
-            answer = 'Thanks for answering the open question.'
-            #if question.feedback
+            response = 'Thanks for answering the open question. '
+            model_answer = get_model_answer(question.id)
+            if model_answer:
+                response += 'Here is a model answer:\n'
+                response += model_answer.text
+        if question.type in ('Multiple Choice', 'Multiple Correct', 'True - False'):
+            answers = question.answers
+            result = self.check_multiple_choice_answer(message, question)
+            fb = get_feedback(question.id, True if result == 'Correct' else False)
+            if result == 'Correct':
+                response = 'You gave the correct answer.\n' + fb.text if fb.text else ' '
+                return response
+            elif result == 'Partly Correct':
+                response = 'Your answer is partly correct. \n'
+            else:
+                response = 'Your answer is incorrect. \n'
+            if fb.text:
+                response += fb.text
+            else:
+                response += 'The correct answer is: \n'
+                for answer in question.answers:
+                    if answer.correct:
+                        response += answer.identifier + ') ' + answer.text + '\n'
+        return response
+
+    def normalize_user_input(self, user_input, question):
+        # Remove any unwanted characters and split the input
+        user_input = re.sub(r'[^\w\s]', '', user_input.lower())
+        tokens = re.split(r'\s+|and', user_input)
+        # Map possible text answers to their identifiers
+        answer_map = self.create_answers_map(question.answers)
+        normalized_answers = []
+        for token in tokens:
+            token = token.strip()
+            if token in answer_map:
+                normalized_answers.append(answer_map[token])
+            elif token in answer_map.values():
+                normalized_answers.append(token)
+        return normalized_answers
+
+    def check_multiple_choice_answer(self, user_input, question):
+        # Create answer map
+        answer_map = self.create_answers_map(question.answers)
+        # Separate correct and incorrect answers
+        correct_answers = {answer.identifier.lower() for answer in question.answers if answer.correct}
+
+        # Normalize the user input
+        user_answers = self.normalize_user_input(user_input, question)
+        user_answers_set = set(user_answers)
+        # Determine the result
+        if user_answers_set == correct_answers:
+            return "Correct"
+        elif user_answers_set & correct_answers:
+            return "Partly Correct"
+        else:
+            return "Incorrect"
+
+    @staticmethod
+    def create_answers_map(answers):
+        answer_map = {}
+        for answer in answers:
+            answer_map[answer.text.lower()] = answer.identifier.lower()
+        return answer_map
 
     def unsubscribe(self, quiz_name, room_id):
         quiz_id = get_quiz_id_by_name(quiz_name)
@@ -137,6 +204,13 @@ class Quizbot:
         quiz_id = get_quiz_id_by_name(quiz_name)
         if delete_quiz_by_id(quiz_id):
             return 'The Quiz has been deleted.'
+        else:
+            return "I'm sorry, that didn't work."
+
+    def reset_quiz(self, quiz_name, room_id):
+        quiz_id = get_quiz_id_by_name(quiz_name)
+        if reset_quiz_by_id(quiz_id, room_id):
+            return 'The Quiz has been reset.'
         else:
             return "I'm sorry, that didn't work."
 
@@ -175,11 +249,14 @@ class Quizbot:
         self.client.add_event_callback(self.message_callback, MegolmEvent)
         await self.login()
 
-        try:
-            logger.info("Starting sync...")
-            await self.client.sync_forever(timeout=30000)  # Adjust timeout as needed
-        except Exception as e:
-            logger.error(f"Error during sync: {e}")
+        while True:
+            try:
+                logger.info("Starting sync...")
+                await self.client.sync_forever(timeout=30000)  # Adjust timeout as needed
+            except Exception as e:
+                logger.error(f"Error during sync: {e}")
+                logger.info("Retrying after error...")
+                await asyncio.sleep(5)
 
     async def login(self):
         response = await self.client.login(self.password)
