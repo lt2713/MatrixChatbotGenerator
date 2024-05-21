@@ -40,15 +40,25 @@ class Quizbot:
             content={"msgtype": "m.text", "body": message}
         )
 
-    def process_message(self, message):
+    def process_message(self, message, room_id):
         message_lower = message.lower()
         words = message_lower.split()
+        command = words[0]
+        parameter = message[len(words[0]):].strip() if len(words) > 1 else None
+
         if message.lower().startswith('hello'):
             return "Hello!"
-        elif words[0] in ('help', '!help') and len(words) == 1:
+        elif command in ('help', '!help') and len(words) == 1:
             return self.message_help()
-        elif words[0] in ('quizzes', 'quizzes') and len(words) == 1:
+        elif command in ('quizzes', 'quizzes') and len(words) == 1:
             return self.message_quizzes()
+        elif command in ('subscribe', '!subscribe', 'unsubscribe', '!unsubscribe'):
+            if command in ('subscribe', '!subscribe'):
+                return self.subscribe(parameter, room_id)
+            else:
+                return self.unsubscribe(parameter, room_id)
+        elif command == '!delete':
+            return self.delete_quiz(parameter)
         else:
             return "I didn't understand that. Type '!help' to see what I can understand."
 
@@ -61,6 +71,7 @@ class Quizbot:
                 '!subscribe quiz_name\t\t subscribe to given quiz\n'
                 '!unsubscribe quiz_name\t unsubscribe from given quiz\n'
                 '!nextquestion quiz_name\t get the next question from given quiz\n'
+                '!delete quiz_name\t\t\t delete the quiz\n'
                 )
 
     def message_quizzes(self):
@@ -71,6 +82,33 @@ class Quizbot:
         for quiz in quizzes:
             result += '- ' + quiz.name + '\n'
         return result
+
+    def subscribe(self, quiz_name, room_id):
+        quiz_id = get_quiz_id_by_name(quiz_name)
+        if not user_exists(room_id):
+            create_user(room_id)
+        if is_user_subscribed(room_id, quiz_id):
+            return 'You are already subscribed to the Quiz.'
+        if subscribe_user_to_quiz(room_id, quiz_id):
+            return f'You have successfully subscribed to the Quiz "{quiz_name}".'
+        else:
+            return "I'm sorry, that didn't work."
+
+    def unsubscribe(self, quiz_name, room_id):
+        quiz_id = get_quiz_id_by_name(quiz_name)
+        if not is_user_subscribed(room_id, quiz_id):
+            return 'You are not subscribed to the Quiz.'
+        if unsubscribe_user_from_quiz(room_id, quiz_id):
+            return f'You have successfully unsubscribed from the Quiz "{quiz_name}".'
+        else:
+            return "I'm sorry, that didn't work."
+
+    def delete_quiz(self, quiz_name):
+        quiz_id = get_quiz_id_by_name(quiz_name)
+        if delete_quiz_by_id(quiz_id):
+            return 'The Quiz has been deleted.'
+        else:
+            return "I'm sorry, that didn't work."
 
     async def message_callback(self, room: MatrixRoom, event):
         if event.sender != self.user:
@@ -92,7 +130,7 @@ class Quizbot:
                 print(f'Unknown event type:')
                 return  # Unknown event type, skip processing
 
-            response_message = self.process_message(message)
+            response_message = self.process_message(message, room.room_id)
             await self.send_message(room.room_id, response_message)
 
     async def invite_callback(self, room: MatrixRoom, event: InviteMemberEvent):

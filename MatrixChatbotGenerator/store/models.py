@@ -1,14 +1,15 @@
 from sqlalchemy import create_engine, Column, String, Boolean, ForeignKey, Table, Integer
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship, sessionmaker
+from store import db_config
 
 Base = declarative_base()
 
 # Association tables for many-to-many relationships
-user_subscribed_to_set = Table('user_subscribed_to_set', Base.metadata,
-                               Column('user_id', String, ForeignKey('user.id')),
-                               Column('quiz_id', String, ForeignKey('quiz.id'))
-                               )
+user_subscribed_to_quiz = Table('user_subscribed_to_quiz', Base.metadata,
+                                Column('user_id', String, ForeignKey('user.id')),
+                                Column('quiz_id', String, ForeignKey('quiz.id'))
+                                )
 
 user_answered_question = Table('user_answered_question', Base.metadata,
                                Column('user_id', String, ForeignKey('user.id')),
@@ -20,7 +21,7 @@ class User(Base):
     __tablename__ = 'user'
     id = Column(String, primary_key=True)
 
-    quizzes = relationship("Quiz", secondary=user_subscribed_to_set, back_populates="users")
+    quizzes = relationship("Quiz", secondary=user_subscribed_to_quiz, back_populates="users")
     questions = relationship("Question", secondary=user_answered_question, back_populates="users")
     last_questions = relationship("LastQuestion", back_populates="user")
 
@@ -32,7 +33,7 @@ class Quiz(Base):
     messages_per_day = Column(Integer)
 
     questions = relationship("Question", back_populates="quiz")
-    users = relationship("User", secondary=user_subscribed_to_set, back_populates="quizzes")
+    users = relationship("User", secondary=user_subscribed_to_quiz, back_populates="quizzes")
 
 
 class Question(Base):
@@ -83,7 +84,7 @@ class LastQuestion(Base):
 
 
 # Create the database
-engine = create_engine('sqlite:///quizbot.db')
+engine = create_engine(db_config.Config.get_db_uri())
 Base.metadata.create_all(engine)
 
 # Create a session
