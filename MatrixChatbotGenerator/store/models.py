@@ -1,4 +1,4 @@
-from sqlalchemy import create_engine, Column, String, Boolean, ForeignKey, Table, Integer
+from sqlalchemy import create_engine, Column, String, Boolean, ForeignKey, Table, Integer, DateTime
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship, sessionmaker
 from store import db_config
@@ -77,6 +77,8 @@ class LastQuestion(Base):
     quiz_id = Column(String, ForeignKey('quiz.id'), primary_key=True)
     question_id = Column(String, ForeignKey('question.id'), primary_key=True)
     answered = Column(Boolean)
+    asked_ts = Column(DateTime)
+    answered_ts = Column(DateTime)
 
     user = relationship("User", back_populates="last_questions")
     quiz = relationship("Quiz")

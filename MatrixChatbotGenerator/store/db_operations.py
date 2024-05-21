@@ -138,6 +138,13 @@ def delete_quiz_by_id(quiz_id):
     return True
 
 
+def get_unanswered_question(user_id, quiz_id):
+
+    subquery = session.query(user_answered_question.c.question_id).filter_by(user_id=user_id).subquery()
+    question = session.query(DbQuestion).filter(DbQuestion.quiz_id == quiz_id, ~DbQuestion.id.in_(subquery)).first()
+    return question
+
+
 if __name__ == '__main__':
     quizzes = fetch_all_quizzes()
     for quiz in quizzes:

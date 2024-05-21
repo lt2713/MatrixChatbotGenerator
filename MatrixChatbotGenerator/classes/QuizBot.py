@@ -57,7 +57,9 @@ class Quizbot:
                 return self.subscribe(parameter, room_id)
             else:
                 return self.unsubscribe(parameter, room_id)
-        elif command == '!delete':
+        elif command in ('nextquestion', '!nextquestion'):
+            return self.next_question(parameter, room_id)
+        elif command in ('delete', '!delete'):
             return self.delete_quiz(parameter)
         else:
             return "I didn't understand that. Type '!help' to see what I can understand."
@@ -94,10 +96,20 @@ class Quizbot:
         else:
             return "I'm sorry, that didn't work."
 
+    def next_question(self, quiz_name, room_id):
+        quiz_id = get_quiz_id_by_name(quiz_name)
+        if not is_user_subscribed(room_id, quiz_id):
+            return f'You are not subscribed to the Quiz "{quiz_name}".'
+        question = get_unanswered_question(room_id, quiz_id)
+        if question:
+            return question.text
+        else:
+            return 'There is no question left i could ask you.'
+
     def unsubscribe(self, quiz_name, room_id):
         quiz_id = get_quiz_id_by_name(quiz_name)
         if not is_user_subscribed(room_id, quiz_id):
-            return 'You are not subscribed to the Quiz.'
+            return f'You are not subscribed to the Quiz "{quiz_name}".'
         if unsubscribe_user_from_quiz(room_id, quiz_id):
             return f'You have successfully unsubscribed from the Quiz "{quiz_name}".'
         else:
