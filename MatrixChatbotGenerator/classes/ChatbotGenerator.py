@@ -19,14 +19,27 @@ class ChatbotGenerator:
             self.questions = questions
         else:
             self.questions = None
+        self.message = ' '
 
     def start(self):
         if not self.transaction or not self.questions:
-            print('Chatbot generation failed!')
+            self.message = 'Chatbot generation failed! Parameter Error.'
             return False
-        add_transaction_as_quiz_to_db(self.transaction)
-        for question in self.questions.questions:
-            add_custom_question_to_db(question, self.transaction.identifier)
+        if quiz_exists(self.transaction.quiz_name):
+            self.message = 'There already is a Quiz with this name. Please use a different Name'
+            return False
+        try:
+            add_transaction_as_quiz_to_db(self.transaction)
+            for question in self.questions.questions:
+                add_custom_question_to_db(question, self.transaction.identifier)
+        except Exception as e:
+            self.message = f'Quiz could not be added due to an unexpected Error: {e}'
+            return False
+        self.message = 'Chatbot generated.'
+        return True
+
+    def get_message(self):
+        return self.message
 
 
 if __name__ == '__main__':
@@ -34,6 +47,6 @@ if __name__ == '__main__':
     default_questions = qtiparser.get_questions()
     default_transaction = Transaction('Letos Testquiz', 1, 'lt_testquiz.xml')
     cg = ChatbotGenerator(default_transaction, default_questions)
-    if cg.start():
-        print('Chatbot generated')
+    cg.start()
+    print(cg.get_message())
 

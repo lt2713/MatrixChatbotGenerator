@@ -4,7 +4,7 @@ from store.models import Answer as DbAnswer
 
 class Answer:
     def __init__(self, identifier, text, correct, key=None):
-        self.id = key if key else uuid.uuid4()
+        self.id = key if key else str(uuid.uuid4())
         self.identifier = identifier
         self.text = text
         self.correct = correct

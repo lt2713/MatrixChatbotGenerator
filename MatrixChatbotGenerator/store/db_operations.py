@@ -1,5 +1,5 @@
 from store.models import Base, User, Quiz, Question as DbQuestion, Answer, Feedback, LastQuestion
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, exists
 from sqlalchemy.orm import sessionmaker
 from store import db_config
 from structures.question import Question
@@ -22,6 +22,15 @@ def add_transaction_as_quiz_to_db(transaction):
     quiz_model = transaction.to_db_model()
     session.add(quiz_model)
     session.commit()
+
+
+def quiz_exists(quiz_name):
+    return session.query(exists().where(Quiz.name == quiz_name)).scalar()
+
+
+def get_quiz_id_by_name(quiz_name):
+    quiz = session.query(Quiz).filter_by(name=quiz_name).first()
+    return quiz.id if quiz else None
 
 
 def fetch_all_quizzes():
