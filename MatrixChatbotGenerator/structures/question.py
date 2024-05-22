@@ -80,7 +80,6 @@ class Question:
     def to_db_model(self, quiz_id):
         question = DbQuestion(
             id=self.id,
-            identifier=self.identifier,
             type=self.type,
             text=self.text,
             quiz_id=quiz_id

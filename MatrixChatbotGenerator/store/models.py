@@ -8,12 +8,13 @@ Base = declarative_base()
 # Association tables for many-to-many relationships
 user_subscribed_to_quiz = Table('user_subscribed_to_quiz', Base.metadata,
                                 Column('user_id', String, ForeignKey('user.id')),
-                                Column('quiz_id', String, ForeignKey('quiz.id'))
+                                Column('quiz_id', String, ForeignKey('quiz.id')),
+                                Column('room_id', String)
                                 )
 
 user_answered_question = Table('user_answered_question', Base.metadata,
                                Column('user_id', String, ForeignKey('user.id')),
-                               Column('question_id', String, ForeignKey('question.id'))
+                               Column('question_id', String, ForeignKey('question.id')),
                                )
 
 
@@ -39,7 +40,6 @@ class Quiz(Base):
 class Question(Base):
     __tablename__ = 'question'
     id = Column(String, primary_key=True)
-    identifier = Column(String)
     type = Column(String)
     text = Column(String)
     quiz_id = Column(String, ForeignKey('quiz.id'))
