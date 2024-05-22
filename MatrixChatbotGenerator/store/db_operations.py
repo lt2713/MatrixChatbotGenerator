@@ -8,7 +8,7 @@ from structures.answer import Answer
 from structures.feedback import Feedback
 from structures.transaction import Transaction
 from datetime import datetime
-
+from util import utility_functions as uf
 
 # Initialize the database connection
 engine = create_engine(db_config.Config.get_db_uri())
@@ -212,7 +212,7 @@ def update_last_question(user_id, quiz_id, question_id, answered=False):
         session.commit()
     except Exception as e:
         session.rollback()
-        print(f"An error occurred in update_last_question: {e}")
+        print(f"An error occurred in {uf.current_function_name()}: {e}")
 
 
 def update_user_answered_question(user_id, question_id):
@@ -236,18 +236,24 @@ def ask_question_to_user(user_id, quiz_id, question_id):
 
 def get_open_question(user_id, quiz_id=None):
     try:
-        open_question = session.query(LastQuestion).filter_by(user_id=user_id).first()
-        # if quiz_id:
-        #     query = query.filter_by(quiz_id=quiz_id)
+        if quiz_id:
+            open_question = session.query(LastQuestion).filter_by(user_id=user_id, quiz_id=quiz_id).first()
+        else:
+            open_question = session.query(LastQuestion).filter_by(user_id=user_id).first()
+        if not open_question:
+            return None
         question = session.query(DbQuestion).filter_by(id=open_question.question_id).first()
         return question if question else None
     except Exception as e:
-        print(f"An error occurred in get_open_question: {e}")
+        print(f"An error occurred in {uf.current_function_name()}: {e}")
         return None
 
 
 def has_open_question(user_id, quiz_id=None):
-    return True if get_open_question(user_id, quiz_id) is not None else False
+    open_question = get_open_question(user_id, quiz_id)
+    if not open_question:
+        return False
+    return not open_question.answered
 
 
 def get_model_answer(question_id):
@@ -255,7 +261,7 @@ def get_model_answer(question_id):
         model_answer = session.query(DbFeedback).filter_by(question_id=question_id, identifier='Model').first()
         return model_answer
     except Exception as e:
-        print(f"An error occurred in get_model_answer: {e}")
+        print(f"An error occurred in {uf.current_function_name()}: {e}")
         return None
 
 
@@ -265,7 +271,7 @@ def get_feedback(question_id, correct=False):
         feedback = session.query(DbFeedback).filter_by(question_id=question_id, identifier=identifier).first()
         return feedback if feedback else None
     except Exception as e:
-        print(f"An error occurred in get_feedback: {e}")
+        print(f"An error occurred in {uf.current_function_name()}: {e}")
         return None
 
 
@@ -274,7 +280,7 @@ def get_all_answers_for_question(question_id):
         answers = session.query(DbAnswer).filter_by(question_id=question_id).all()
         return answers
     except Exception as e:
-        print(f"An error occurred in get_all_answers_for_question: {e}")
+        print(f"An error occurred in {uf.current_function_name()}: {e}")
         return []
 
 

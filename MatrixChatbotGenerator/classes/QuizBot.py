@@ -133,12 +133,10 @@ class Quizbot:
                 response += 'Here is a model answer:\n'
                 response += model_answer.text
         if question.type in ('Multiple Choice', 'Multiple Correct', 'True - False'):
-            answers = question.answers
             result = self.check_multiple_choice_answer(message, question)
             fb = get_feedback(question.id, True if result == 'Correct' else False)
             if result == 'Correct':
-                response = 'You gave the correct answer.\n' + fb.text if fb.text else ' '
-                return response
+                response = 'You gave the correct answer.\n'
             elif result == 'Partly Correct':
                 response = 'Your answer is partly correct. \n'
             else:
@@ -146,10 +144,13 @@ class Quizbot:
             if fb.text:
                 response += fb.text
             else:
-                response += 'The correct answer is: \n'
-                for answer in question.answers:
-                    if answer.correct:
-                        response += answer.identifier + ') ' + answer.text + '\n'
+                if result != 'Correct':
+                    response += 'The correct answer is: \n'
+                    for answer in question.answers:
+                        if answer.correct:
+                            response += answer.identifier + ') ' + answer.text + '\n'
+        update_user_answered_question(room_id, question.id)
+        update_last_question(room_id, open_question.quiz_id, question.id, True)
         return response
 
     def normalize_user_input(self, user_input, question):
