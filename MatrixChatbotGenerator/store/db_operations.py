@@ -1,6 +1,6 @@
 from store.models import Base, User, Quiz, Question as DbQuestion, Answer as DbAnswer, Feedback as DbFeedback,  \
     LastQuestion, user_subscribed_to_quiz, user_answered_question
-from sqlalchemy import create_engine, exists
+from sqlalchemy import create_engine, exists, func, select
 from sqlalchemy.orm import sessionmaker
 from store import db_config
 from structures.question import Question
@@ -8,12 +8,14 @@ from structures.answer import Answer
 from structures.feedback import Feedback
 from structures.transaction import Transaction
 from datetime import datetime
-from util import utility_functions as uf
+from util import utility_functions as util
 
 # Initialize the database connection
 engine = create_engine(db_config.Config.get_db_uri())
 Session = sessionmaker(bind=engine)
 session = Session()
+
+logger = util.create_logger('db_operations')
 
 
 def add_custom_question_to_db(question, quiz_id):
@@ -33,7 +35,10 @@ def quiz_exists(quiz_name):
 
 
 def get_quiz_id_by_name(quiz_name):
-    quiz = session.query(Quiz).filter_by(name=quiz_name).first()
+    normalized_quiz_name = quiz_name.strip().lower()
+
+    quiz = session.query(Quiz).filter(func.lower(Quiz.name) == normalized_quiz_name).first()
+
     return quiz.id if quiz else None
 
 
@@ -55,7 +60,7 @@ def create_user(user_id):
             session.commit()
         except Exception as e:
             session.rollback()
-            print(e)
+            logger.error(e)
             return False
     else:
         return False
@@ -65,21 +70,25 @@ def create_user(user_id):
 def get_subscribed_quizzes(user_id):
     quizzes = session.query(Quiz).join(user_subscribed_to_quiz).\
         filter(user_subscribed_to_quiz.c.user_id == user_id).all()
-    return [quiz.name for quiz in quizzes]
+    return quizzes if quizzes else None
 
 
 def is_user_subscribed(user_id, quiz_id):
     return session.query(user_subscribed_to_quiz).filter_by(user_id=user_id, quiz_id=quiz_id).count() > 0
 
 
-def subscribe_user_to_quiz(user_id, quiz_id):
+def count_subscribed_quizzes(user_id):
+    return session.query(user_subscribed_to_quiz).filter_by(user_id=user_id).count()
+
+
+def subscribe_user_to_quiz(user_id, quiz_id, room_id):
     if not is_user_subscribed(user_id, quiz_id):
         try:
-            session.execute(user_subscribed_to_quiz.insert().values(user_id=user_id, quiz_id=quiz_id))
+            session.execute(user_subscribed_to_quiz.insert().values(user_id=user_id, quiz_id=quiz_id, room_id=room_id))
             session.commit()
         except Exception as e:
             session.rollback()
-            print(e)
+            logger.error(e)
             return False
     else:
         return False
@@ -91,9 +100,10 @@ def unsubscribe_user_from_quiz(user_id, quiz_id):
         try:
             session.query(user_subscribed_to_quiz).filter_by(user_id=user_id, quiz_id=quiz_id).delete()
             session.commit()
+            reset_quiz_by_id(quiz_id, user_id)
         except Exception as e:
             session.rollback()
-            print(e)
+            logger.error(e)
             return False
     else:
         return False
@@ -104,7 +114,6 @@ def delete_quiz_by_id(quiz_id):
     try:
         quiz = session.query(Quiz).filter_by(id=quiz_id).first()
         if not quiz:
-            print(f"No quiz found with ID {quiz_id}")
             return
 
         # Delete all feedback related to the quiz questions
@@ -134,7 +143,7 @@ def delete_quiz_by_id(quiz_id):
         session.commit()
     except Exception as e:
         session.rollback()
-        print(e)
+        logger.error(e)
         return False
     return True
 
@@ -143,7 +152,6 @@ def reset_quiz_by_id(quiz_id, user_id):
     try:
         quiz = session.query(Quiz).filter_by(id=quiz_id).first()
         if not quiz:
-            print(f"No quiz found with ID {quiz_id}")
             return
 
         # Delete all entries in last_question
@@ -154,19 +162,29 @@ def reset_quiz_by_id(quiz_id, user_id):
         session.commit()
     except Exception as e:
         session.rollback()
-        print(e)
+        logger.error(e)
         return False
     return True
 
 
 def get_unanswered_question(user_id, quiz_id):
+    answered_questions = session.query(user_answered_question).filter_by(user_id=user_id).all()
+    answered_ids = {aq.question_id for aq in answered_questions}
 
-    subquery = session.query(user_answered_question.c.question_id).filter_by(user_id=user_id).subquery()
-    question = session.query(DbQuestion).filter(DbQuestion.quiz_id == quiz_id, ~DbQuestion.id.in_(subquery)).first()
-    return question
+    all_questions = session.query(DbQuestion).filter_by(quiz_id=quiz_id).all()
+
+    for question in all_questions:
+        if question.id not in answered_ids:
+            return question
+    return None
 
 
 def convert_question_model_to_question(db_question):
+    """
+
+    :param db_question:
+    :return: question (Python Class)
+    """
     answers = [
         Answer(key=ans.id, identifier=ans.identifier, text=ans.text, correct=ans.is_correct)
         for ans in db_question.answers
@@ -176,7 +194,7 @@ def convert_question_model_to_question(db_question):
         for fb in db_question.feedback
     ]
     question = Question(
-        identifier=db_question.identifier,
+        identifier=db_question.key,
         question_type=db_question.type,
         text=db_question.text,
         answers=answers,
@@ -189,8 +207,7 @@ def convert_question_model_to_question(db_question):
 def update_last_question(user_id, quiz_id, question_id, answered=False):
     session = Session()
     try:
-        last_question = session.query(LastQuestion).filter_by(user_id=user_id, quiz_id=quiz_id,
-                                                              question_id=question_id).first()
+        last_question = session.query(LastQuestion).filter_by(user_id=user_id, quiz_id=quiz_id).first()
         if last_question:
             last_question.question_id = question_id
             last_question.answered = answered
@@ -212,7 +229,7 @@ def update_last_question(user_id, quiz_id, question_id, answered=False):
         session.commit()
     except Exception as e:
         session.rollback()
-        print(f"An error occurred in {uf.current_function_name()}: {e}")
+        logger.error(f"An error occurred in {util.current_function_name()}: {e}")
 
 
 def update_user_answered_question(user_id, question_id):
@@ -229,12 +246,12 @@ def ask_question_to_user(user_id, quiz_id, question_id):
         update_user_answered_question(user_id, question_id)
     except Exception as e:
         session.rollback()
-        print(e)
+        logger.error(e)
         return False
     return True
 
 
-def get_open_question(user_id, quiz_id=None):
+def get_open_question(user_id, quiz_id=None, is_answered=None):
     try:
         if quiz_id:
             open_question = session.query(LastQuestion).filter_by(user_id=user_id, quiz_id=quiz_id).first()
@@ -242,18 +259,17 @@ def get_open_question(user_id, quiz_id=None):
             open_question = session.query(LastQuestion).filter_by(user_id=user_id).first()
         if not open_question:
             return None
+        if is_answered:
+            return not open_question.answered
         question = session.query(DbQuestion).filter_by(id=open_question.question_id).first()
         return question if question else None
     except Exception as e:
-        print(f"An error occurred in {uf.current_function_name()}: {e}")
+        logger.error(f"An error occurred in {util.current_function_name()}: {e}")
         return None
 
 
 def has_open_question(user_id, quiz_id=None):
-    open_question = get_open_question(user_id, quiz_id)
-    if not open_question:
-        return False
-    return not open_question.answered
+    return get_open_question(user_id, quiz_id, True)
 
 
 def get_model_answer(question_id):
@@ -261,7 +277,7 @@ def get_model_answer(question_id):
         model_answer = session.query(DbFeedback).filter_by(question_id=question_id, identifier='Model').first()
         return model_answer
     except Exception as e:
-        print(f"An error occurred in {uf.current_function_name()}: {e}")
+        logger.error(f"An error occurred in {util.current_function_name()}: {e}")
         return None
 
 
@@ -271,7 +287,7 @@ def get_feedback(question_id, correct=False):
         feedback = session.query(DbFeedback).filter_by(question_id=question_id, identifier=identifier).first()
         return feedback if feedback else None
     except Exception as e:
-        print(f"An error occurred in {uf.current_function_name()}: {e}")
+        logger.error(f"An error occurred in {util.current_function_name()}: {e}")
         return None
 
 
@@ -280,7 +296,7 @@ def get_all_answers_for_question(question_id):
         answers = session.query(DbAnswer).filter_by(question_id=question_id).all()
         return answers
     except Exception as e:
-        print(f"An error occurred in {uf.current_function_name()}: {e}")
+        logger.error(f"An error occurred in {util.current_function_name()}: {e}")
         return []
 
 
