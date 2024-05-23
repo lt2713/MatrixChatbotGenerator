@@ -121,34 +121,28 @@ class Quizbot:
         open_question = get_open_question(user_id)
         question = convert_question_model_to_question(open_question)
         response = ' '
+
         if question.type == 'Essay Question':
-            response = 'Thanks for answering the open question. '
-            model_answer = get_model_answer(question.id)
-            if model_answer:
-                response += 'Here is a model answer:\n'
-                response += model_answer.text
-        if question.type in ('Multiple Choice', 'Multiple Correct', 'True - False'):
-            result = self.check_multiple_choice_answer(message, question)
-            fb = get_feedback(question.id, True if result == 'Correct' else False)
-            if result == 'Correct':
-                response = 'You gave the correct answer.\n'
-            elif result == 'Partly Correct':
-                response = 'Your answer is partly correct. \n'
-            else:
-                response = 'Your answer is incorrect. \n'
-            if fb.text:
-                response += fb.text
-            else:
-                if result != 'Correct':
-                    response += 'The correct answer is: \n'
-                    for answer in question.answers:
-                        if answer.correct:
-                            response += answer.identifier + ') ' + answer.text + '\n'
+            response = self.check_essay_answer(question, message)
+        elif question.type in ('Multiple Choice', 'Multiple Correct', 'True - False'):
+            response = self.check_multiple_choice_answer(message, question)
+
         update_user_asked_question(user_id, question.id)
         update_last_question(user_id, open_question.quiz_id, question.id, room_id, True)
         if not get_unanswered_question(user_id, open_question.quiz_id):
             response += '\nCongratulations, you have completed the quiz.'
             unsubscribe_user_from_quiz(user_id, open_question.quiz_id)
+        return response
+
+    def check_essay_answer(self, question, user_answer):
+        model_answer = get_model_answer(question.id)
+        response = 'Thanks for answering the open question. '
+
+        if not model_answer:
+            response += 'No model answer available to compare.'
+            return response
+        if model_answer and model_answer.text:
+            response += f'Here is a model answer:\n{model_answer.text}'
         return response
 
     def check_multiple_choice_answer(self, user_input, question):
@@ -162,11 +156,28 @@ class Quizbot:
         user_answers_set = set(user_answers)
         # Determine the result
         if user_answers_set == correct_answers:
-            return "Correct"
+            result = "Correct"
         elif user_answers_set & correct_answers:
-            return "Partly Correct"
+            result = "Partly Correct"
         else:
-            return "Incorrect"
+            result = "Incorrect"
+
+        fb = get_feedback(question.id, True if result == 'Correct' else False)
+        if result == 'Correct':
+            response = 'You gave the correct answer.\n'
+        elif result == 'Partly Correct':
+            response = 'Your answer is partly correct. \n'
+        else:
+            response = 'Your answer is incorrect. \n'
+        if fb and fb.text:
+            response += fb.text
+        else:
+            if result != 'Correct':
+                response += 'The correct answer is: \n'
+                for answer in question.answers:
+                    if answer.correct:
+                        response += answer.identifier + ') ' + answer.text + '\n'
+        return response
 
     @staticmethod
     def delete_quiz(quiz_name):
@@ -252,7 +263,7 @@ class Quizbot:
             return self.delete_quiz(parameter)
         elif command in ('reset', '!reset'):
             return self.reset_quiz(user_id, parameter)
-        elif has_open_question(user_id):
+        elif has_open_question(user_id, None, room_id):
             return self.process_answer(user_id, message, room_id)
         else:
             return "I didn't understand that. Type 'help' to see what I can understand."
