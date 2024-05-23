@@ -161,7 +161,6 @@ class Quizbot:
             result = "Partly Correct"
         else:
             result = "Incorrect"
-
         fb = get_feedback(question.id, True if result == 'Correct' else False)
         if result == 'Correct':
             response = 'You gave the correct answer.\n'

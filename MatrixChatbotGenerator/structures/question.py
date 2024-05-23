@@ -17,6 +17,7 @@ class Question:
             for answer in self.answers:
                 if len(answer.identifier) > 1:
                     generate_identifiers = True
+                    break
         if generate_identifiers:
             new_identifiers = list(string.ascii_uppercase)
             for i, answer in enumerate(self.answers):

@@ -87,28 +87,28 @@ class QTIParser:
                 found_equal = False
                 other_text = None
                 for respcondition in item.findall('.//respcondition'):
-                    varequal_element = respcondition.find('.//varequal')
                     conditionvar_element = respcondition.find('.//conditionvar')
                     other_element = conditionvar_element.find('.//other')
                     if other_element is not None:
                         other_text = respcondition.get('title')
-                    if varequal_element is not None and varequal_element.text == ident:
-                        found_equal = True
-                        try:
-                            linkrefid = respcondition.find('.//displayfeedback[@feedbacktype="Response"]').get(
-                                'linkrefid')
-                        except Exception as e:
-                            linkrefid = respcondition.get('title')
-                        if not linkrefid:
-                            logger.error(f'Could not determine if answer is correct. {question.id} {question.text} '
-                                         f'{answer_text}')
+                    for varequal_element in respcondition.findall('.//varequal'):
+                        if varequal_element is not None and varequal_element.text == ident:
+                            found_equal = True
+                            try:
+                                linkrefid = respcondition.find('.//displayfeedback[@feedbacktype="Response"]').get(
+                                    'linkrefid')
+                            except Exception as e:
+                                linkrefid = respcondition.get('title')
+                            if not linkrefid:
+                                logger.error(f'Could not determine if answer is correct. {question.id} {question.text} '
+                                             f'{answer_text}')
 
-                        if linkrefid.lower() == 'correct':
-                            answer_true = True
-                        else:
-                            answer_true = False
-                        new_answer = Answer(ident, answer_text, answer_true)
-                        return new_answer
+                            if linkrefid.lower() == 'correct':
+                                answer_true = True
+                            else:
+                                answer_true = False
+                            new_answer = Answer(ident, answer_text, answer_true)
+                            return new_answer
                 if not found_equal and other_text:
                     if other_text.lower() == 'correct':
                         answer_true = True
@@ -121,9 +121,14 @@ class QTIParser:
             logger.error(f"No text found for answer for question {question.id + ' ' + question.text}")
 
     def find_model_answer(self, item, question):
-        model_answer = item.find('.//response_label/material/mattext').text
-        feedback = Feedback('Model', model_answer)
-        question.feedback.append(feedback)
+        model_answer = item.find('.//response_label/material/mattext')
+        if not model_answer:
+            model_answer = item.find('.//itemfeedback/solution/solutionmaterial/mattext')
+        if model_answer is not None:
+            text = model_answer.text
+            feedback = Feedback('Model', text)
+            question.feedback.append(feedback)
+        logger.error(f'Could not find Model Answer for question {question.id} {question.text}')
 
     def find_feedbacks(self, item, question):
         for itemfeedback in item.findall('.//itemfeedback'):
