@@ -12,10 +12,11 @@ user_subscribed_to_quiz = Table('user_subscribed_to_quiz', Base.metadata,
                                 Column('room_id', String)
                                 )
 
-user_answered_question = Table('user_answered_question', Base.metadata,
-                               Column('user_id', String, ForeignKey('user.id')),
-                               Column('question_id', String, ForeignKey('question.id')),
-                               )
+user_asked_question = Table('user_asked_question', Base.metadata,
+                            Column('user_id', String, ForeignKey('user.id')),
+                            Column('question_id', String, ForeignKey('question.id')),
+                            Column('ts', DateTime)
+                            )
 
 
 class User(Base):
@@ -23,7 +24,7 @@ class User(Base):
     id = Column(String, primary_key=True)
 
     quizzes = relationship("Quiz", secondary=user_subscribed_to_quiz, back_populates="users")
-    questions = relationship("Question", secondary=user_answered_question, back_populates="users")
+    questions = relationship("Question", secondary=user_asked_question, back_populates="users")
     last_questions = relationship("LastQuestion", back_populates="user")
 
 
@@ -47,7 +48,7 @@ class Question(Base):
     quiz = relationship("Quiz", back_populates="questions")
     answers = relationship("Answer", back_populates="question")
     feedback = relationship("Feedback", back_populates="question")
-    users = relationship("User", secondary=user_answered_question, back_populates="questions")
+    users = relationship("User", secondary=user_asked_question, back_populates="questions")
 
 
 class Answer(Base):
@@ -76,6 +77,7 @@ class LastQuestion(Base):
     user_id = Column(String, ForeignKey('user.id'), primary_key=True)
     quiz_id = Column(String, ForeignKey('quiz.id'), primary_key=True)
     question_id = Column(String, ForeignKey('question.id'))
+    room_id = Column(String)
     answered = Column(Boolean)
     asked_ts = Column(DateTime)
     answered_ts = Column(DateTime)

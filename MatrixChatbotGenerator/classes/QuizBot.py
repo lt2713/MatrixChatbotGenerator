@@ -44,7 +44,8 @@ class Quizbot:
                 'delete quiz_name\t\t\t delete the quiz\n'
                 )
 
-    def quizzes_list(self):
+    @staticmethod
+    def quizzes_list():
         quizzes = fetch_all_quizzes()
         if len(quizzes) == 0:
             return 'There are no quizzes available.'
@@ -53,7 +54,8 @@ class Quizbot:
             result += '- ' + quiz.name + '\n'
         return result
 
-    def subscribe(self, user_id, room_id, quiz_name):
+    @staticmethod
+    def subscribe(user_id, room_id, quiz_name):
         quiz_id = get_quiz_id_by_name(quiz_name)
         if not quiz_id:
             return 'This Quiz does not exist.'
@@ -66,9 +68,10 @@ class Quizbot:
         else:
             return "I'm sorry, that didn't work."
 
-    def subscribed_quizzes(self, user_id):
+    @staticmethod
+    def subscribed_quizzes(user_id):
         quizzes = get_subscribed_quizzes(user_id)
-        if not quizzes or len(quizzes) == 0:
+        if len(quizzes) == 0:
             response = 'You are not subscribed to any Quiz.'
         else:
             response = 'You are subscribed to the following Quizzes: \n'
@@ -76,7 +79,8 @@ class Quizbot:
                 response += quiz.name
         return response
 
-    def unsubscribe(self, user_id, quiz_name):
+    @staticmethod
+    def unsubscribe(user_id, quiz_name):
         quiz_id = get_quiz_id_by_name(quiz_name)
         if not quiz_id:
             return 'This Quiz does not exist.'
@@ -87,7 +91,7 @@ class Quizbot:
         else:
             return "I'm sorry, that didn't work."
 
-    def next_question(self, user_id, quiz_name):
+    def next_question(self, user_id, quiz_name, room_id):
         if not quiz_name and count_subscribed_quizzes(user_id) == 1:
             quiz_id = get_subscribed_quizzes(user_id)[0].id
         else:
@@ -100,19 +104,20 @@ class Quizbot:
             return 'You still have an open question. Please try to answer that first.'
         question = get_unanswered_question(user_id, quiz_id)
         if question:
-            return self.ask_question(quiz_id, user_id, question)
+            return self.ask_question(quiz_id, user_id, question, room_id)
         else:
             unsubscribe_user_from_quiz(user_id, quiz_id)
             return 'There is no question left i could ask you.'
 
-    def ask_question(self, quiz_id, user_id, db_question):
+    @staticmethod
+    def ask_question(quiz_id, user_id, db_question, room_id):
         question = convert_question_model_to_question(db_question)
-        if ask_question_to_user(user_id, quiz_id, question.id):
+        if ask_question_to_user(user_id, quiz_id, question.id, room_id):
             return question.get()
         else:
             return 'There was an unexpected error trying to ask a question.'
 
-    def process_answer(self, user_id, message):
+    def process_answer(self, user_id, message, room_id):
         open_question = get_open_question(user_id)
         question = convert_question_model_to_question(open_question)
         response = ' '
@@ -139,8 +144,8 @@ class Quizbot:
                     for answer in question.answers:
                         if answer.correct:
                             response += answer.identifier + ') ' + answer.text + '\n'
-        update_user_answered_question(user_id, question.id)
-        update_last_question(user_id, open_question.quiz_id, question.id, True)
+        update_user_asked_question(user_id, question.id)
+        update_last_question(user_id, open_question.quiz_id, question.id, room_id, True)
         if not get_unanswered_question(user_id, open_question.quiz_id):
             response += '\nCongratulations, you have completed the quiz.'
             unsubscribe_user_from_quiz(user_id, open_question.quiz_id)
@@ -163,7 +168,8 @@ class Quizbot:
         else:
             return "Incorrect"
 
-    def delete_quiz(self, quiz_name):
+    @staticmethod
+    def delete_quiz(quiz_name):
         quiz_id = get_quiz_id_by_name(quiz_name)
         if not quiz_id:
             return 'This Quiz does not exist.'
@@ -172,7 +178,8 @@ class Quizbot:
         else:
             return "I'm sorry, that didn't work."
 
-    def reset_quiz(self, user_id, quiz_name):
+    @staticmethod
+    def reset_quiz(user_id, quiz_name):
         quiz_id = get_quiz_id_by_name(quiz_name)
         if not quiz_id:
             return 'This Quiz does not exist.'
@@ -180,6 +187,37 @@ class Quizbot:
             return 'The Quiz has been reset.'
         else:
             return "I'm sorry, that didn't work."
+
+    @staticmethod
+    def get_users_to_notify():
+        quizzes = get_all_quizzes()
+        users_to_notify = []
+        notified_rooms = set()
+        for quiz in quizzes:
+            quiz_id = quiz.id
+            messages_per_day = quiz.messages_per_day
+            subscribed_users = get_subscribed_users(quiz_id)
+
+            for user in subscribed_users:
+                room_id = get_subscribed_room(user.id, quiz_id)
+                if room_id in notified_rooms:
+                    continue
+                if get_asked_questions_count_on_date(user.id, quiz_id, datetime.now()) < messages_per_day \
+                        and not has_open_question(user.id, quiz_id) \
+                        and not has_open_question(user.id, None, room_id):
+                    users_to_notify.append((user.id, quiz_id, room_id))
+                    notified_rooms.add(room_id)
+
+        return users_to_notify
+
+    async def send_quiz_questions(self):
+        users_to_notify = self.get_users_to_notify()
+        logger.info(f"Periodic Task found {len(users_to_notify)} users to be notified")
+        for user_id, quiz_id, room_id in users_to_notify:
+            question = get_unanswered_question(user_id, quiz_id)
+            if question:
+                message = self.ask_question(quiz_id, user_id, question, room_id)
+                await self.send_message(room_id, message)
 
     async def send_message(self, room_id, message):
         logger.info(f"sending message to room id {room_id}: {message}")
@@ -209,13 +247,13 @@ class Quizbot:
         elif command == 'subscribed':
             return self.subscribed_quizzes(user_id)
         elif command in ('nextquestion', '!nextquestion', '!nq'):
-            return self.next_question(user_id, parameter)
+            return self.next_question(user_id, parameter, room_id)
         elif command in ('delete', '!delete'):
             return self.delete_quiz(parameter)
         elif command in ('reset', '!reset'):
             return self.reset_quiz(user_id, parameter)
         elif has_open_question(user_id):
-            return self.process_answer(user_id, message)
+            return self.process_answer(user_id, message, room_id)
         else:
             return "I didn't understand that. Type 'help' to see what I can understand."
 
@@ -252,6 +290,24 @@ class Quizbot:
                       f"commands I understand. "
             await self.send_message(room.room_id, message)
 
+    async def periodic_task(self):
+        while True:
+            current_time = datetime.now().time()
+            start_time = datetime.strptime("09:00", "%H:%M").time()
+            end_time = datetime.strptime("20:00", "%H:%M").time()
+            logger.info("Periodic Task started")
+            if start_time <= current_time <= end_time:
+                await self.send_quiz_questions()
+                await asyncio.sleep(60)  # Run every x seconds
+            else:
+                # If outside the time range, wait for next full hour before checking again
+                logger.info("Periodic Task outside the time range. Trying again in an hour.")
+                now = datetime.now()
+                next_hour = (now + timedelta(hours=1)).replace(minute=0, second=0, microsecond=0)
+                wait_time = (next_hour - now).total_seconds()
+
+                await asyncio.sleep(wait_time)
+
     def normalize_user_input(self, user_input, question):
         # Remove any unwanted characters and split the input
         user_input = re.sub(r'[^\w\s]', '', user_input.lower())
@@ -280,6 +336,8 @@ class Quizbot:
         self.client.add_event_callback(self.invite_callback, InviteMemberEvent)
         self.client.add_event_callback(self.message_callback, MegolmEvent)
         await self.login()
+
+        asyncio.create_task(self.periodic_task())
 
         while True:
             try:

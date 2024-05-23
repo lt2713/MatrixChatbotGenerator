@@ -1,5 +1,5 @@
 from store.models import Base, User, Quiz, Question as DbQuestion, Answer as DbAnswer, Feedback as DbFeedback,  \
-    LastQuestion, user_subscribed_to_quiz, user_answered_question
+    LastQuestion, user_subscribed_to_quiz, user_asked_question
 from sqlalchemy import create_engine, exists, func, select
 from sqlalchemy.orm import sessionmaker
 from store import db_config
@@ -7,7 +7,7 @@ from structures.question import Question
 from structures.answer import Answer
 from structures.feedback import Feedback
 from structures.transaction import Transaction
-from datetime import datetime
+from datetime import datetime, timedelta
 from util import utility_functions as util
 
 # Initialize the database connection
@@ -109,11 +109,23 @@ def get_subscribed_quizzes(user_id):
     Retrieves all quizzes to which a user is subscribed.
 
     :param user_id: The ID of the user.
-    :return: A list of quizzes the user is subscribed to, or None if there are no subscriptions.
+    :return: A list of quizzes the user is subscribed to, or an empty list if there are no subscriptions.
     """
     quizzes = session.query(Quiz).join(user_subscribed_to_quiz).\
         filter(user_subscribed_to_quiz.c.user_id == user_id).all()
-    return quizzes if quizzes else None
+    return quizzes if quizzes else []
+
+
+def get_subscribed_users(quiz_id):
+    """
+    Retrieves all users which are subscribed to a quiz.
+
+    :param quiz_id: The ID of the quiz.
+    :return: A list of users that are subscribed to a Quiz or an empty list.
+    """
+    users = session.query(User).join(user_subscribed_to_quiz).\
+        filter(user_subscribed_to_quiz.c.quiz_id == quiz_id).all()
+    return users if users else []
 
 
 def is_user_subscribed(user_id, quiz_id):
@@ -126,6 +138,17 @@ def is_user_subscribed(user_id, quiz_id):
     """
     return session.query(user_subscribed_to_quiz).filter_by(user_id=user_id, quiz_id=quiz_id).count() > 0
 
+def get_subscribed_room(user_id, quiz_id):
+    """
+    Gets the room a user subscribed to a specific quiz.
+
+    :param user_id: The ID of the user.
+    :param quiz_id: The ID of the quiz.
+    :return: Room Id or None
+    """
+    subscription = session.query(user_subscribed_to_quiz).filter_by(user_id=user_id, quiz_id=quiz_id).first()
+    return subscription.room_id if subscription.room_id else None
+
 
 def count_subscribed_quizzes(user_id):
     """
@@ -135,6 +158,16 @@ def count_subscribed_quizzes(user_id):
     :return: The number of quizzes the user is subscribed to.
     """
     return session.query(user_subscribed_to_quiz).filter_by(user_id=user_id).count()
+
+
+def get_all_quizzes():
+    """
+    Counts the number of quizzes a user is subscribed to.
+
+    :param user_id: The ID of the user.
+    :return: The number of quizzes the user is subscribed to.
+    """
+    return session.query(Quiz).all()
 
 
 def subscribe_user_to_quiz(user_id, quiz_id, room_id):
@@ -181,6 +214,50 @@ def unsubscribe_user_from_quiz(user_id, quiz_id):
     return True
 
 
+def get_asked_questions(user_id, quiz_id):
+    """
+    Retrieves all questions asked to a user from a specific quiz.
+
+    :param user_id: The ID of the user.
+    :param quiz_id: The ID of the quiz.
+    :return: A list of questions that have been asked to the user from the specified quiz.
+    """
+    try:
+        asked_questions = session.query(DbQuestion).\
+            join(user_asked_question, DbQuestion.id == user_asked_question.c.question_id).\
+            filter(user_asked_question.c.user_id == user_id, DbQuestion.quiz_id == quiz_id).all()
+        return asked_questions
+    except Exception as e:
+        logger.error(f"An error occurred in {util.current_function_name()}: {e}")
+        return []
+
+
+def get_asked_questions_count_on_date(user_id, quiz_id, date):
+    """
+    Retrieves the number of questions asked on a specific date to a user from a specific quiz.
+
+    :param user_id: The ID of the user.
+    :param quiz_id: The ID of the quiz.
+    :param date: The specific date to count the questions (datetime.date object).
+    :return: The number of questions asked on the specified date to the user from the quiz.
+    """
+    try:
+        # Get the start and end datetime for the specified date
+        day_start = datetime.combine(date, datetime.min.time())
+        day_end = day_start + timedelta(days=1)
+
+        count = session.query(func.count(user_asked_question.c.question_id)).\
+            join(DbQuestion, DbQuestion.id == user_asked_question.c.question_id).\
+            filter(user_asked_question.c.user_id == user_id,
+                   DbQuestion.quiz_id == quiz_id,
+                   user_asked_question.c.ts >= day_start,
+                   user_asked_question.c.ts < day_end).scalar()
+        return count
+    except Exception as e:
+        logger.error(f"An error occurred in {util.current_function_name()}: {e}")
+        return 0
+
+
 def delete_quiz_by_id(quiz_id):
     """
     Deletes a quiz and all related data by its ID.
@@ -201,9 +278,9 @@ def delete_quiz_by_id(quiz_id):
         for question in quiz.questions:
             session.query(DbAnswer).filter_by(question_id=question.id).delete()
 
-        # Delete all entries from user_answered_question related to the quiz questions
+        # Delete all entries from user_asked_question related to the quiz questions
         for question in quiz.questions:
-            session.query(user_answered_question).filter_by(question_id=question.id).delete()
+            session.query(user_asked_question).filter_by(question_id=question.id).delete()
 
         # Delete all questions related to the quiz
         session.query(DbQuestion).filter_by(quiz_id=quiz_id).delete()
@@ -240,9 +317,9 @@ def reset_quiz_by_id(quiz_id, user_id):
 
         # Delete all entries in last_question
         session.query(LastQuestion).filter_by(quiz_id=quiz_id, user_id=user_id).delete()
-        # Delete all entries in user_answer_question
+        # Delete all entries in user_asked_question
         for question in quiz.questions:
-            session.query(user_answered_question).filter_by(question_id=question.id, user_id=user_id).delete()
+            session.query(user_asked_question).filter_by(question_id=question.id, user_id=user_id).delete()
         session.commit()
     except Exception as e:
         session.rollback()
@@ -259,7 +336,7 @@ def get_unanswered_question(user_id, quiz_id):
     :param quiz_id: The ID of the quiz.
     :return: The first unanswered question object, or None if all questions are answered.
     """
-    answered_questions = session.query(user_answered_question).filter_by(user_id=user_id).all()
+    answered_questions = session.query(user_asked_question).filter_by(user_id=user_id).all()
     answered_ids = {aq.question_id for aq in answered_questions}
 
     all_questions = session.query(DbQuestion).filter_by(quiz_id=quiz_id).all()
@@ -286,7 +363,7 @@ def convert_question_model_to_question(db_question):
         for fb in db_question.feedback
     ]
     question = Question(
-        identifier=db_question.key,
+        identifier=db_question.id,
         question_type=db_question.type,
         text=db_question.text,
         answers=answers,
@@ -296,7 +373,7 @@ def convert_question_model_to_question(db_question):
     return question
 
 
-def update_last_question(user_id, quiz_id, question_id, answered=False):
+def update_last_question(user_id, quiz_id, question_id, room_id, answered=False):
     """
     Updates the last question information for a user in a specific quiz.
 
@@ -311,6 +388,7 @@ def update_last_question(user_id, quiz_id, question_id, answered=False):
         if last_question:
             last_question.question_id = question_id
             last_question.answered = answered
+            last_question.room_id = room_id
             if answered:
                 last_question.answered_ts = datetime.now()
             else:
@@ -320,6 +398,7 @@ def update_last_question(user_id, quiz_id, question_id, answered=False):
                 user_id=user_id,
                 quiz_id=quiz_id,
                 question_id=question_id,
+                room_id=room_id,
                 answered=answered,
                 asked_ts=datetime.now() if not answered else None,
                 answered_ts=datetime.now() if answered else None
@@ -332,21 +411,21 @@ def update_last_question(user_id, quiz_id, question_id, answered=False):
         logger.error(f"An error occurred in {util.current_function_name()}: {e}")
 
 
-def update_user_answered_question(user_id, question_id):
+def update_user_asked_question(user_id, question_id):
     """
     Updates the user answered question information in the database.
 
     :param user_id: The ID of the user.
     :param question_id: The ID of the question.
     """
-    exists = session.query(user_answered_question).filter_by(user_id=user_id, question_id=question_id).count() > 0
+    exists = session.query(user_asked_question).filter_by(user_id=user_id, question_id=question_id).count() > 0
     if not exists:
-        stmt = user_answered_question.insert().values(user_id=user_id, question_id=question_id)
+        stmt = user_asked_question.insert().values(user_id=user_id, question_id=question_id, ts=datetime.now())
         session.execute(stmt)
         session.commit()
 
 
-def ask_question_to_user(user_id, quiz_id, question_id):
+def ask_question_to_user(user_id, quiz_id, question_id, room_id):
     """
     Asks a question to a user by updating the last question and answered question records.
 
@@ -356,8 +435,8 @@ def ask_question_to_user(user_id, quiz_id, question_id):
     :return: True if the operation was successful, False otherwise.
     """
     try:
-        update_last_question(user_id, quiz_id, question_id)
-        update_user_answered_question(user_id, question_id)
+        update_last_question(user_id, quiz_id, question_id, room_id)
+        update_user_asked_question(user_id, question_id)
     except Exception as e:
         session.rollback()
         logger.error(e)
@@ -365,18 +444,23 @@ def ask_question_to_user(user_id, quiz_id, question_id):
     return True
 
 
-def get_open_question(user_id, quiz_id=None, is_answered=None):
+def get_open_question(user_id, quiz_id=None, room_id=None, is_answered=None):
     """
     Retrieves the open question for a user in a specific quiz.
 
     :param user_id: The ID of the user.
     :param quiz_id: The ID of the quiz (optional).
     :param is_answered: Boolean indicating whether to check if the question is answered (optional).
-    :return: The open question object, or None if no open question is found.
+    :return: The open question object, or None if no open question is found. When is_answered it returns a boolean.
     """
     try:
-        if quiz_id:
+        if quiz_id and room_id:
+            open_question = session.query(LastQuestion).filter_by(user_id=user_id,
+                                                                  quiz_id=quiz_id, room_id=room_id).first()
+        elif quiz_id:
             open_question = session.query(LastQuestion).filter_by(user_id=user_id, quiz_id=quiz_id).first()
+        elif room_id:
+            open_question = session.query(LastQuestion).filter_by(user_id=user_id, room_id=room_id).first()
         else:
             open_question = session.query(LastQuestion).filter_by(user_id=user_id).first()
         if not open_question:
@@ -390,7 +474,7 @@ def get_open_question(user_id, quiz_id=None, is_answered=None):
         return None
 
 
-def has_open_question(user_id, quiz_id=None):
+def has_open_question(user_id, quiz_id=None, room_id=None):
     """
     Checks if a user has an open question in a specific quiz.
 
@@ -398,7 +482,7 @@ def has_open_question(user_id, quiz_id=None):
     :param quiz_id: The ID of the quiz (optional).
     :return: True if there is an open question, False otherwise.
     """
-    return get_open_question(user_id, quiz_id, True)
+    return get_open_question(user_id, quiz_id, room_id, True)
 
 
 def get_model_answer(question_id):
