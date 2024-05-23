@@ -42,10 +42,10 @@ class UserInterface:
 
         # create messages per day dropdown
         tk.Label(self.root, text="Messages per day:").grid(row=1, column=0, padx=10, pady=5, sticky='w')
-        self.year_options = ["1", "2", "3", "4"]
+        self.msg_per_day_options = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10"]
         self.msg_per_day_selected = tk.StringVar()
         self.msg_per_day_dropdown = ttk.Combobox(self.root, textvariable=self.msg_per_day_selected,
-                                                 values=self.year_options)
+                                                 values=self.msg_per_day_options)
         self.msg_per_day_dropdown.grid(row=1, column=1, padx=10, pady=5, sticky='w')
         self.msg_per_day_dropdown.current(0)  # Set default selection
 
@@ -115,6 +115,7 @@ class UserInterface:
         self.msg_per_day_dropdown.current(0)
         self.quiz_name_entry.focus_set()
 
+    @staticmethod
     def open_config_window(self):
         config_window = ConfigWindow()
         config_window.loop()
