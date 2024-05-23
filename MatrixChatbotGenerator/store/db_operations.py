@@ -456,13 +456,20 @@ def get_open_question(user_id, quiz_id=None, room_id=None, is_answered=None):
     try:
         if quiz_id and room_id:
             open_question = session.query(LastQuestion).filter_by(user_id=user_id,
-                                                                  quiz_id=quiz_id, room_id=room_id).first()
+                                                                  quiz_id=quiz_id,
+                                                                  room_id=room_id,
+                                                                  answered=False).first()
         elif quiz_id:
-            open_question = session.query(LastQuestion).filter_by(user_id=user_id, quiz_id=quiz_id).first()
+            open_question = session.query(LastQuestion).filter_by(user_id=user_id,
+                                                                  quiz_id=quiz_id,
+                                                                  answered=False).first()
         elif room_id:
-            open_question = session.query(LastQuestion).filter_by(user_id=user_id, room_id=room_id).first()
+            open_question = session.query(LastQuestion).filter_by(user_id=user_id,
+                                                                  room_id=room_id,
+                                                                  answered=False).first()
         else:
-            open_question = session.query(LastQuestion).filter_by(user_id=user_id).first()
+            open_question = session.query(LastQuestion).filter_by(user_id=user_id,
+                                                                  answered=False).first()
         if not open_question:
             return None
         if is_answered:
@@ -511,6 +518,8 @@ def get_feedback(question_id, correct=False):
     try:
         identifier = 'Correct' if correct else 'InCorrect'
         feedback = session.query(DbFeedback).filter_by(question_id=question_id, identifier=identifier).first()
+        if not feedback:
+            feedback = session.query(DbFeedback).filter_by(question_id=question_id, identifier='FEEDBACK').first()
         return feedback if feedback else None
     except Exception as e:
         logger.error(f"An error occurred in {util.current_function_name()}: {e}")
