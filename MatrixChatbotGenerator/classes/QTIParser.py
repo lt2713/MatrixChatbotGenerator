@@ -3,6 +3,9 @@ from structures.questions import Questions
 from structures.question import Question
 from structures.answer import Answer
 from structures.feedback import Feedback
+from util import utility_functions as util
+
+logger = util.create_logger('QTIParser')
 
 
 class QTIParser:
@@ -25,7 +28,7 @@ class QTIParser:
             tree = ET.parse(self.file)
             return tree.getroot()
         except Exception as e:
-            print(f'An unexpected error occurred while trying to read the file:{e}')
+            logger.error(f'An unexpected error occurred while trying to read the file:{e}')
             return None
 
     def find_questions(self):
@@ -34,7 +37,7 @@ class QTIParser:
             try:
                 question = self.find_question(questions, item)
             except Exception as e:
-                print(f'An unexpected error occurred while trying to read a question:{e}')
+                logger.error(f'An unexpected error occurred while trying to read a question:{e}')
                 question = None
             if question:
                 questions.append(question)
@@ -45,9 +48,15 @@ class QTIParser:
         question_id = item.get('ident')
         question_type = item.get('title')
         if question_type.lower() not in self.valid_question_types_lower:
-            print('Question type ' + question_type + ' not supported!')
+            logger.error('Question type ' + question_type + ' not supported!')
             return None
-        question_text = item.find('.//presentation/flow/material/mattext').text.strip()
+        try:
+            question_text = item.find('.//presentation/flow/material/mattext').text.strip()
+        except Exception as e:
+            question_text = item.find('.//presentation/material/mattext').text.strip()
+        if not question_text:
+            logger.error('Could not find Question Text')
+            return None
         question = Question(question_id, question_type, question_text)
         question.answers = self.find_answers(item, question)
         if question.type == 'Essay Question':
@@ -62,8 +71,8 @@ class QTIParser:
             try:
                 new_answer = self.find_answer(item, answer, question)
             except Exception as e:
-                print(f'An unexpected error occurred while trying to read an answer:{e} '
-                      f'question: {question.id} {question.text}')
+                logger.error(f'An unexpected error occurred while trying to read an answer:{e} '
+                             f'question: {question.id} {question.text}')
                 new_answer = None
             if new_answer:
                 answers.append(new_answer)
@@ -75,19 +84,41 @@ class QTIParser:
         if mattext_element is not None:
             answer_text = mattext_element.text
             if answer_text is not None:
+                found_equal = False
+                other_text = None
                 for respcondition in item.findall('.//respcondition'):
                     varequal_element = respcondition.find('.//varequal')
+                    conditionvar_element = respcondition.find('.//conditionvar')
+                    other_element = conditionvar_element.find('.//other')
+                    if other_element is not None:
+                        other_text = respcondition.get('title')
                     if varequal_element is not None and varequal_element.text == ident:
-                        linkrefid = respcondition.find('.//displayfeedback[@feedbacktype="Response"]').get(
-                            'linkrefid')
-                        if linkrefid == 'Correct':
+                        found_equal = True
+                        try:
+                            linkrefid = respcondition.find('.//displayfeedback[@feedbacktype="Response"]').get(
+                                'linkrefid')
+                        except Exception as e:
+                            linkrefid = respcondition.get('title')
+                        if not linkrefid:
+                            logger.error(f'Could not determine if answer is correct. {question.id} {question.text} '
+                                         f'{answer_text}')
+
+                        if linkrefid.lower() == 'correct':
                             answer_true = True
                         else:
                             answer_true = False
                         new_answer = Answer(ident, answer_text, answer_true)
                         return new_answer
+                if not found_equal and other_text:
+                    if other_text.lower() == 'correct':
+                        answer_true = True
+                    else:
+                        answer_true = False
+                    new_answer = Answer(ident, answer_text, answer_true)
+                    return new_answer
+
         else:
-            print("No text found for answer")
+            logger.error(f"No text found for answer for question {question.id + ' ' + question.text}")
 
     def find_model_answer(self, item, question):
         model_answer = item.find('.//response_label/material/mattext').text
@@ -99,8 +130,8 @@ class QTIParser:
             try:
                 feedback = self.find_feedback(itemfeedback)
             except Exception as e:
-                print(f'An unexpected error occurred while trying to read feedback:{e}'
-                      f'question: {question.id} {question.text}')
+                logger.error(f'An unexpected error occurred while trying to read feedback:{e}'
+                             f'question: {question.id} {question.text}')
                 feedback = None
             if feedback:
                 question.feedback.append(feedback)
@@ -108,7 +139,7 @@ class QTIParser:
     def find_feedback(self, itemfeedback):
         # Get the ident attribute value
         ident = itemfeedback.get('ident')
-        if ident == 'Correct' or ident == 'InCorrect':
+        if ident.lower() == 'correct' or ident.lower() == 'incorrect' or ident.lower() == 'feedback':
             # Find the mattext element within the itemfeedback element
             mattext_element = itemfeedback.find('.//mattext')
             text_content = mattext_element.text
