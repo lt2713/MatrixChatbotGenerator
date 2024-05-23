@@ -1,3 +1,4 @@
+import string
 import uuid
 from structures.answer import Answer
 from structures.feedback import Feedback
@@ -11,6 +12,16 @@ class Question:
         self.type = question_type
         self.text = text if text else ' '
         self.answers = [Answer(**ans) if isinstance(ans, dict) else ans for ans in (answers or [])]
+        generate_identifiers = False
+        if self.answers and len(self.answers) > 0:
+            for answer in self.answers:
+                if len(answer.identifier) > 1:
+                    generate_identifiers = True
+        if generate_identifiers:
+            new_identifiers = list(string.ascii_uppercase)
+            for i, answer in enumerate(self.answers):
+                answer.identifier = new_identifiers[i]
+
         self.feedback = [Feedback(**fb) if isinstance(fb, dict) else fb for fb in (feedback or [])]
 
     def validate(self):
