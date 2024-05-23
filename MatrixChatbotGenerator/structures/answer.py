@@ -5,7 +5,8 @@ from store.models import Answer as DbAnswer
 class Answer:
     def __init__(self, identifier, text, correct, key=None):
         self.id = key if key else str(uuid.uuid4())
-        self.identifier = identifier
+
+        self.identifier = self.extract_choice_suffix(identifier)
         self.text = text
         self.correct = correct
 
@@ -25,6 +26,12 @@ class Answer:
 
     def print_short(self):
         print(self.identifier + '\t' + self.text + '\t' + str(self.correct))
+
+    def extract_choice_suffix(self, choice_string):
+        if choice_string.startswith("CHOICE_") and len(choice_string) == 8:
+            return choice_string.split('_')[-1]
+        else:
+            return choice_string
 
     def get(self):
         return self.identifier + ') ' + self.text + '\n'
