@@ -116,7 +116,7 @@ class UserInterface:
         self.quiz_name_entry.focus_set()
 
     @staticmethod
-    def open_config_window(self):
+    def open_config_window():
         config_window = ConfigWindow()
         config_window.loop()
 
