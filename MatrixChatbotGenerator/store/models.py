@@ -1,4 +1,5 @@
-from sqlalchemy import create_engine, Column, String, Boolean, ForeignKey, Table, Integer, DateTime
+import uuid
+from sqlalchemy import create_engine, Column, String, Boolean, ForeignKey, Table, Integer, DateTime, func
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship, sessionmaker
 from store import db_config
@@ -21,7 +22,7 @@ user_asked_question = Table('user_asked_question', Base.metadata,
 
 class User(Base):
     __tablename__ = 'user'
-    id = Column(String, primary_key=True)
+    id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
 
     quizzes = relationship("Quiz", secondary=user_subscribed_to_quiz, back_populates="users")
     questions = relationship("Question", secondary=user_asked_question, back_populates="users")
@@ -30,7 +31,7 @@ class User(Base):
 
 class Quiz(Base):
     __tablename__ = 'quiz'
-    id = Column(String, primary_key=True)
+    id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
     name = Column(String)
     messages_per_day = Column(Integer)
 
@@ -40,7 +41,7 @@ class Quiz(Base):
 
 class Question(Base):
     __tablename__ = 'question'
-    id = Column(String, primary_key=True)
+    id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
     type = Column(String)
     text = Column(String)
     quiz_id = Column(String, ForeignKey('quiz.id'))
@@ -53,7 +54,7 @@ class Question(Base):
 
 class Answer(Base):
     __tablename__ = 'answer'
-    id = Column(String, primary_key=True)
+    id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
     identifier = Column(String)
     text = Column(String)
     is_correct = Column(Boolean)
@@ -64,7 +65,7 @@ class Answer(Base):
 
 class Feedback(Base):
     __tablename__ = 'feedback'
-    id = Column(String, primary_key=True)
+    id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
     identifier = Column(String)
     text = Column(String)
     question_id = Column(String, ForeignKey('question.id'))
@@ -94,4 +95,3 @@ Base.metadata.create_all(engine)
 # Create a session
 Session = sessionmaker(bind=engine)
 session = Session()
-
