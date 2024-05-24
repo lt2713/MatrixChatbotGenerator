@@ -44,7 +44,7 @@ class ChatbotGenerator:
     def add_transaction_as_quiz_to_db(self, transaction):
         quiz_data = {
             'name': transaction.quiz_name,
-            'messages_per_day': transaction.messages_per_day
+            'messages_per_day': transaction.msg_per_day
         }
         response = requests.post(f'{self.api_url}/quizzes', json=quiz_data)
         if response.status_code != 201:
