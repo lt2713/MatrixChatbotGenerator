@@ -1,6 +1,6 @@
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-import db_config
+from store import db_config
 from store.models import User, Quiz, Question, Answer, Feedback
 
 engine = create_engine(db_config.Config.get_db_uri())
