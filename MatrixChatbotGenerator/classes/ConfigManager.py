@@ -4,7 +4,7 @@ from cryptography.fernet import Fernet
 
 # Paths to the config and key files
 CONFIG_FILE = './data/config.ini'
-KEY_FILE = './secret.key'
+KEY_FILE = './data/secret.key'
 
 
 class ConfigManager:
