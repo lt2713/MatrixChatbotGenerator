@@ -1,5 +1,7 @@
+import uuid
+
 from flask import Flask, request, jsonify
-from store.models import Session, Quiz, Question
+from store.models import Session, Quiz, Question, Answer, Feedback
 
 app = Flask(__name__)
 
