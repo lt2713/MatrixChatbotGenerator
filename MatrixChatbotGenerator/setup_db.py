@@ -7,6 +7,6 @@ def main():
     create_test_data()
 
 
-if __name__ = '__main__':
+if __name__ == '__main__':
     main()
-    
+
