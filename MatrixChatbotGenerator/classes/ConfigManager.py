@@ -3,8 +3,8 @@ import os
 from cryptography.fernet import Fernet
 
 # Paths to the config and key files
-CONFIG_FILE = '../data/config.ini'
-KEY_FILE = '../secret.key'
+CONFIG_FILE = './data/config.ini'
+KEY_FILE = './secret.key'
 
 
 class ConfigManager:

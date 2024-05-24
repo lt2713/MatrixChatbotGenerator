@@ -15,7 +15,7 @@ def create_logger(name):
     logger.setLevel(logging.INFO)
 
     # Set up a RotatingFileHandler
-    handler = RotatingFileHandler(f'../data/{name}.log', maxBytes=1024 * 1024 * 5, backupCount=5)
+    handler = RotatingFileHandler(f'./data/{name}.log', maxBytes=1024 * 1024 * 5, backupCount=5)
     formatter = CustomFormatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
     handler.setFormatter(formatter)
 

@@ -14,9 +14,7 @@ logger = util.create_logger('quizbot')
 
 
 class Quizbot:
-    def __init__(self, transaction=None, questions=None):
-        self.transaction = transaction if transaction else None
-        self.questions = questions if questions else None
+    def __init__(self):
         self.config = ChatbotConfig()
         self.homeserver = self.config.get_homeserver()
         self.user = self.config.get_user_id()
@@ -28,7 +26,7 @@ class Quizbot:
         logger.info(self.config.get())
 
         # Path to store the next_batch token
-        self.next_batch_file = '../data/next_batch_token.json'
+        self.next_batch_file = './data/next_batch_token.json'
         self.load_next_batch()
 
     @staticmethod

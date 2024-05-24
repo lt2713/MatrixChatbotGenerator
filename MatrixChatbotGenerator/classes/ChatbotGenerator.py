@@ -39,9 +39,9 @@ class ChatbotGenerator:
 
 
 if __name__ == '__main__':
-    qtiparser = QTIParser('../data/lt_testquiz.xml')
+    qtiparser = QTIParser('./data/lt_testquiz.xml')
     default_questions = qtiparser.get_questions()
-    default_transaction = Transaction('Letos Testquiz', 1, '../data/lt_testquiz.xml')
+    default_transaction = Transaction('Letos Testquiz', 1, './data/lt_testquiz.xml')
     cg = ChatbotGenerator(default_transaction, default_questions)
     cg.start()
     print(cg.get_message())
