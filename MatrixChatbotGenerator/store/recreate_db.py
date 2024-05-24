@@ -10,7 +10,11 @@ def recreate_db():
     Base.metadata.create_all(engine)
 
 
-if __name__ == "__main__":
+def main():
     recreate_db()
+
+
+if __name__ == "__main__":
+    main()
 
 
