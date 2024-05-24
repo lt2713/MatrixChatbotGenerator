@@ -3,3 +3,4 @@ cryptography
 matrix-nio
 SQLAlchemy
 flask
+requests
