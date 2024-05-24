@@ -1,5 +1,5 @@
 from flask import Flask, request, jsonify
-from models import Session, Quiz, Question
+from store.models import Session, Quiz, Question
 
 app = Flask(__name__)
 
