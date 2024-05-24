@@ -4,4 +4,9 @@ from store.db_test import main as create_test_data
 
 def main():
     create_db()
-    create_test_data()  
+    create_test_data()
+
+
+if __name__ = '__main__':
+    main()
+    
