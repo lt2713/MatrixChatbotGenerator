@@ -46,6 +46,29 @@ def add_question(quiz_id):
     )
     session.add(new_question)
     session.commit()
+
+    # Add answers
+    for answer in data.get('answers', []):
+        new_answer = Answer(
+            id=str(uuid.uuid4()),
+            identifier=answer['identifier'],
+            text=answer['text'],
+            is_correct=answer['is_correct'],
+            question_id=new_question.id
+        )
+        session.add(new_answer)
+
+    # Add feedbacks
+    for feedback in data.get('feedback', []):
+        new_feedback = Feedback(
+            id=str(uuid.uuid4()),
+            identifier=feedback['identifier'],
+            text=feedback['text'],
+            question_id=new_question.id
+        )
+        session.add(new_feedback)
+
+    session.commit()
     return jsonify({'id': new_question.id}), 201
 
 
