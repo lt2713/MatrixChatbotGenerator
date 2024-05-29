@@ -18,7 +18,8 @@ class ChatbotGenerator:
         else:
             self.questions = None
         self.message = ' '
-        self.config = ConfigManager.load_config('Db')
+        cm = ConfigManager()
+        self.config = cm.load_config('Db')
 
         self.api_url = url if url else self.config['Db']['server']
         self.user = user if user else self.config['Db']['user_id']

@@ -74,7 +74,7 @@ class Quizbot:
         else:
             response = 'You are subscribed to the following Quizzes: \n'
             for quiz in quizzes:
-                response += quiz.name
+                response += '- ' + quiz.name + '\n'
         return response
 
     @staticmethod
