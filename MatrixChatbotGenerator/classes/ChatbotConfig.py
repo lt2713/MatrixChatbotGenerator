@@ -4,7 +4,8 @@ from classes.ConfigManager import ConfigManager
 class ChatbotConfig:
     def __init__(self):
         self.name = 'Matrix'
-        self.config = ConfigManager.load_config(self.name)
+        cm = ConfigManager()
+        self.config = cm.load_config(self.name)
 
     def get_homeserver(self):
         return self.config[self.name]['server']
