@@ -4,6 +4,7 @@ from flask import Flask, request, jsonify
 from store.models import Session, Quiz, Question, Answer, Feedback
 
 app = Flask(__name__)
+ssl_enabled = False
 
 # Use the existing session from models.py
 session = Session()
@@ -80,7 +81,10 @@ def helloworld():
 
 
 def main():
-    app.run(host='0.0.0.0', port=2713,  ssl_context=('cert.pem', 'key.pem'))
+    if ssl_enabled:
+        app.run(host='0.0.0.0', port=2713,  ssl_context=('cert.pem', 'key.pem'))
+    else:
+        app.run(host='0.0.0.0', port=2713)
 
 
 if __name__ == '__main__':
