@@ -19,13 +19,17 @@ class ConfigManager:
                 key = key_file.read()
         return key
 
-    @staticmethod
-    def load_config():
+    def load_config(self, name):
         config = configparser.ConfigParser()
         if os.path.exists(CONFIG_FILE):
             config.read(CONFIG_FILE)
         else:
-            config['Matrix'] = {'homeserver': '', 'user_id': '', 'password': ''}
+            if name == 'Db':
+                config[name] = {'server': 'https://ltquiz.duckdns.org', 'user_id': 'quizbot', 'password':
+                                self.encrypt_password('botquiz')}
+            elif name == 'Matrix':
+                config[name] = {'server': 'https://matrix-client.matrix.org', 'user_id': '@lt2713b:matrix.org',
+                                'password': self.encrypt_password('4Rz5EdP6Yem$R9W')}
             with open(CONFIG_FILE, 'w') as configfile:
                 config.write(configfile)
         return config

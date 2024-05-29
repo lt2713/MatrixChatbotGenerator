@@ -31,7 +31,8 @@ class UserInterface:
         # create file menu
         file_menu = tk.Menu(self.menu_bar, tearoff=0)
         self.menu_bar.add_cascade(label="File", menu=file_menu)
-        file_menu.add_command(label="Edit Config", command=self.open_config_window)
+        file_menu.add_command(label="Edit Db Config", command=self.open_db_config)
+        # file_menu.add_command(label="Edit Matrix Config", command=self.open_matrix_config)
         file_menu.add_separator()
         file_menu.add_command(label="Exit", command=self.root.quit)
 
@@ -116,8 +117,18 @@ class UserInterface:
         self.quiz_name_entry.focus_set()
 
     @staticmethod
-    def open_config_window():
-        config_window = ConfigWindow()
+    def open_config_window(name):
+        config_window = ConfigWindow(name)
+        config_window.loop()
+
+    @staticmethod
+    def open_db_config():
+        config_window = ConfigWindow('Db')
+        config_window.loop()
+
+    @staticmethod
+    def open_matrix_config():
+        config_window = ConfigWindow('Matrix')
         config_window.loop()
 
     def loop(self):

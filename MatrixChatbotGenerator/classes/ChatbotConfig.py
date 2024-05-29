@@ -3,16 +3,17 @@ from classes.ConfigManager import ConfigManager
 
 class ChatbotConfig:
     def __init__(self):
-        self.config = ConfigManager.load_config()
+        self.name = 'Matrix'
+        self.config = ConfigManager.load_config(self.name)
 
     def get_homeserver(self):
-        return self.config['Matrix']['homeserver']
+        return self.config[self.name]['server']
 
     def get_user_id(self):
-        return self.config['Matrix']['user_id']
+        return self.config[self.name]['user_id']
 
     def get_password(self):
-        return self.config['Matrix']['password']
+        return self.config[self.name]['password']
 
     def get(self):
         return f"Homeserver: {self.get_homeserver()}\t" \
