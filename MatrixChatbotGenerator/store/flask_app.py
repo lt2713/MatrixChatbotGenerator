@@ -80,7 +80,7 @@ def helloworld():
 
 
 def main():
-    app.run(host='0.0.0.0', port=2713)
+    app.run(host='0.0.0.0', port=2713,  ssl_context=('cert.pem', 'key.pem'))
 
 
 if __name__ == '__main__':
