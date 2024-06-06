@@ -6,7 +6,6 @@ from store import db_config
 from structures.question import Question
 from structures.answer import Answer
 from structures.feedback import Feedback
-from structures.quiz import Transaction
 from datetime import datetime, timedelta
 from util import utility_functions as util
 
@@ -30,13 +29,13 @@ def add_custom_question_to_db(question, quiz_id):
     session.commit()
 
 
-def add_transaction_as_quiz_to_db(transaction):
+def add_transaction_as_quiz_to_db(quiz):
     """
-    Adds a transaction as a quiz to the database.
+    Adds a quiz to the database.
 
-    :param transaction: The transaction object to be added as a quiz.
+    :param quiz: The quiz object to be added as a quiz.
     """
-    quiz_model = transaction.to_db_model()
+    quiz_model = quiz.to_db_model()
     session.add(quiz_model)
     session.commit()
 
