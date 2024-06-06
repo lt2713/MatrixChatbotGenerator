@@ -2,21 +2,15 @@ import requests
 from requests.auth import HTTPBasicAuth
 
 from classes.ConfigManager import ConfigManager
-from structures.questions import Questions
-from structures.transaction import Transaction
-from classes.QTIParser import QTIParser
+from structures.quiz import Quiz
 
 
 class ChatbotGenerator:
-    def __init__(self, transaction, questions, url=None, user=None, password=None):
-        if isinstance(transaction, Transaction):
-            self.transaction = transaction
+    def __init__(self, quiz, url=None, user=None, password=None):
+        if isinstance(quiz, Quiz):
+            self.quiz = quiz
         else:
-            self.transaction = None
-        if isinstance(questions, Questions):
-            self.questions = questions
-        else:
-            self.questions = None
+            self.quiz = None
         self.message = ' '
         cm = ConfigManager()
         self.config = cm.load_config('Db')
@@ -27,15 +21,15 @@ class ChatbotGenerator:
         self.auth = HTTPBasicAuth(self.user, self.password)
 
     def start(self):
-        if not self.transaction or not self.questions or len(self.questions.questions) == 0:
+        if not self.quiz or len(self.quiz.questions) == 0:
             self.message = 'Chatbot generation failed! Parameter Error.'
             return False
-        if self.quiz_exists(self.transaction.quiz_name):
+        if self.quiz_exists(self.quiz.name):
             self.message = 'There already is a Quiz with this name. Please use a different Name'
             return False
         try:
-            quiz_id = self.add_transaction_as_quiz_to_db(self.transaction)
-            for question in self.questions.questions:
+            quiz_id = self.add_transaction_as_quiz_to_db(self.quiz)
+            for question in self.quiz.questions:
                 self.add_custom_question_to_db(question, quiz_id)
         except Exception as e:
             self.message = f'Quiz could not be added due to an unexpected Error: {e}'
@@ -50,10 +44,10 @@ class ChatbotGenerator:
         response = requests.get(f'{self.api_url}/quizzes/{quiz_name}', auth=self.auth)
         return response.status_code == 200
 
-    def add_transaction_as_quiz_to_db(self, transaction):
+    def add_transaction_as_quiz_to_db(self, quiz):
         quiz_data = {
-            'name': transaction.quiz_name,
-            'messages_per_day': transaction.msg_per_day
+            'name': quiz.name,
+            'messages_per_day': quiz.msg_per_day
         }
         response = requests.post(f'{self.api_url}/quizzes', json=quiz_data, auth=self.auth)
         if response.status_code != 201:
@@ -73,12 +67,4 @@ class ChatbotGenerator:
         response = requests.post(f'{self.api_url}/quizzes/{quiz_id}/questions', json=question_data, auth=self.auth)
         if response.status_code != 201:
             raise Exception('Failed to add question')
-
-
-if __name__ == '__main__':
-    qtiparser = QTIParser('./data/lt_testquiz.xml')
-    default_questions = qtiparser.get_questions()
-    default_transaction = Transaction('Letos Testquiz', 1, './data/lt_testquiz.xml')
-    cg = ChatbotGenerator(default_transaction, default_questions)
-    cg.start()
 

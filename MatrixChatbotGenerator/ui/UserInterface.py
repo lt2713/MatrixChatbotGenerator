@@ -3,7 +3,7 @@ from tkinter import filedialog
 from tkinter import ttk
 from tkinter import messagebox
 import os
-from structures.transaction import Transaction
+from structures.quiz import Quiz
 from classes.QTIParser import QTIParser
 from classes.ChatbotGenerator import ChatbotGenerator
 from ui.ConfigWindow import ConfigWindow
@@ -97,16 +97,15 @@ class UserInterface:
         if self.fileselection:
             qtiparser = QTIParser(selected_file)
             self.questions = qtiparser.get_questions()
-
-        transaction = Transaction(quiz_name, messages_per_day, selected_file)
-        cg = ChatbotGenerator(transaction, self.questions)
+        quiz = Quiz(quiz_name, messages_per_day, selected_file, self.questions)
+        cg = ChatbotGenerator(quiz)
         if cg.start():
-            messagebox.showinfo('Success!', 'Chatbot created, info comming soon TODO')
+            messagebox.showinfo('Success!', f'Quiz {quiz.name} was created with '
+                                            f'{quiz.get_number_of_questions()} questions.')
             self.clear_screen()
         else:
             print('error ' + cg.get_message())
-            print(f'transaction {transaction.print()}')
-            print(f'questions {self.questions.print_short()}')
+            print(f'transaction {quiz.print_short()}')
             messagebox.showerror('Error!', cg.get_message())
 
     def clear_screen(self):
@@ -115,11 +114,6 @@ class UserInterface:
         self.quiz_name_entry.delete(0, tk.END)
         self.msg_per_day_dropdown.current(0)
         self.quiz_name_entry.focus_set()
-
-    @staticmethod
-    def open_config_window(name):
-        config_window = ConfigWindow(name)
-        config_window.loop()
 
     @staticmethod
     def open_db_config():

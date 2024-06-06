@@ -1,5 +1,5 @@
 import xml.etree.ElementTree as ET
-from structures.questions import Questions
+from structures.quiz import Quiz
 from structures.question import Question
 from structures.answer import Answer
 from structures.feedback import Feedback
@@ -14,14 +14,14 @@ class QTIParser:
             self.file = './data/lt_testquiz.xml'
         else:
             self.file = file
-        self.questions = Questions()
+        self.quiz = Quiz()
         self.valid_question_types = Question.valid_types()
         self.valid_question_types_lower = Question.valid_types_lower()
         self.tree = self.build_tree()
         if self.tree:
             questions_found = self.find_questions()
             for question in questions_found:
-                self.questions.add(question)
+                self.quiz.add_question(question)
 
     def build_tree(self):
         try:
@@ -152,4 +152,4 @@ class QTIParser:
                 return Feedback(ident, text_content)
 
     def get_questions(self):
-        return self.questions
+        return self.quiz.questions

@@ -6,7 +6,7 @@ from store import db_config
 from structures.question import Question
 from structures.answer import Answer
 from structures.feedback import Feedback
-from structures.transaction import Transaction
+from structures.quiz import Transaction
 from datetime import datetime, timedelta
 from util import utility_functions as util
 

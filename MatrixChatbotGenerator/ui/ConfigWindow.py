@@ -9,7 +9,8 @@ class ConfigWindow:
 
     def __init__(self, config_name):
         self.config_name = config_name if config_name else 'Db'
-        self.config = ConfigManager.load_config(config_name)
+        self.cm = ConfigManager()
+        self.config = self.cm.load_config(config_name)
 
         self.root = tk.Tk()
         self.root.title("Matrix Bot Configuration")
