@@ -3,6 +3,7 @@ from tkinter import filedialog
 from tkinter import ttk
 from tkinter import messagebox
 import os
+import threading
 from structures.quiz import Quiz
 from classes.QTIParser import QTIParser
 from classes.ChatbotGenerator import ChatbotGenerator
@@ -99,14 +100,29 @@ class UserInterface:
             self.questions = qtiparser.get_questions()
         quiz = Quiz(quiz_name, messages_per_day, selected_file, self.questions)
         cg = ChatbotGenerator(quiz)
-        if cg.start():
-            messagebox.showinfo('Success!', f'Quiz {quiz.name} was created with '
-                                            f'{quiz.get_number_of_questions()} questions.')
-            self.clear_screen()
-        else:
-            print('error ' + cg.get_message())
-            print(f'transaction {quiz.print_short()}')
-            messagebox.showerror('Error!', cg.get_message())
+
+        progress_window = tk.Toplevel(self.root)
+        progress_window.title("Progress")
+        progress_window.geometry("400x100")
+        progress_label = tk.Label(progress_window, text="Uploading Quiz...")
+        progress_label.pack(pady=10)
+        progress_bar = ttk.Progressbar(progress_window, orient="horizontal", length=300, mode="determinate")
+        progress_bar.pack(pady=10)
+
+        def update_progress(value):
+            progress_bar["value"] = value
+            progress_window.update_idletasks()
+
+        def run_generator():
+            if cg.start(update_progress):
+                messagebox.showinfo('Success!', f'Quiz {quiz.name} was created containing '
+                                                f'{quiz.get_number_of_questions()} questions.')
+                self.clear_screen()
+            else:
+                messagebox.showerror('Error!', cg.get_message())
+            progress_window.destroy()
+
+        threading.Thread(target=run_generator).start()
 
     def clear_screen(self):
         if self.fileselection:

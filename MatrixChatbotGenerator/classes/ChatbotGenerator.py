@@ -20,7 +20,7 @@ class ChatbotGenerator:
         self.password = password if password else ConfigManager.decrypt_password(self.config['Db']['password'])
         self.auth = HTTPBasicAuth(self.user, self.password)
 
-    def start(self):
+    def start(self, progress_callback=None):
         if not self.quiz or len(self.quiz.questions) == 0:
             self.message = 'Chatbot generation failed! Parameter Error.'
             return False
@@ -28,9 +28,16 @@ class ChatbotGenerator:
             self.message = 'There already is a Quiz with this name. Please use a different Name'
             return False
         try:
+            if progress_callback:
+                progress_callback(0)
             quiz_id = self.add_transaction_as_quiz_to_db(self.quiz)
-            for question in self.quiz.questions:
+            if progress_callback:
+                progress_callback(10)
+            total_questions = len(self.quiz.questions)
+            for i, question in enumerate(self.quiz.questions, 1):
                 self.add_custom_question_to_db(question, quiz_id)
+                if progress_callback:
+                    progress_callback(10 + (i * 100 / total_questions))
         except Exception as e:
             self.message = f'Quiz could not be added due to an unexpected Error: {e}'
             return False
