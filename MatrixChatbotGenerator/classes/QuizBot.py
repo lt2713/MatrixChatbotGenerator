@@ -120,9 +120,9 @@ class Quizbot:
         question = convert_question_model_to_question(open_question)
         response = ' '
 
-        if question.type == 'Essay Question':
+        if open_question.is_essay:
             response = self.check_essay_answer(question, message)
-        elif question.type in ('Multiple Choice', 'Multiple Correct', 'True - False'):
+        elif open_question.is_multiple_choice:
             response = self.check_multiple_choice_answer(message, question)
 
         update_user_asked_question(user_id, question.id)

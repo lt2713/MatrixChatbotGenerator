@@ -92,9 +92,10 @@ class Question:
     def to_db_model(self, quiz_id):
         question = DbQuestion(
             id=self.id,
-            type=self.type,
             text=self.text,
-            quiz_id=quiz_id
+            quiz_id=quiz_id,
+            is_essay=True if self.type == "Essay Question" else False,
+            is_multiple_choice=True if self.type != "Essay Question" else False
         )
         question.answers = [answer.to_db_model(question.id) for answer in self.answers]
         question.feedback = [feedback.to_db_model(question.id) for feedback in self.feedback]

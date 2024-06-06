@@ -15,7 +15,7 @@ def create_quiz(quiz_id, name, messages_per_day):
 
 
 def create_question(question_id, quiz, text, question_type="Multiple Choice"):
-    question = Question(id=question_id, type=question_type, text=text, quiz=quiz)
+    question = Question(id=question_id, is_essay=False, is_multiple_choice=True, text=text, quiz=quiz)
     session.add(question)
     return question
 

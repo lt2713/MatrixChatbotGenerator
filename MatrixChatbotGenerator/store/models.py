@@ -42,8 +42,9 @@ class Quiz(Base):
 class Question(Base):
     __tablename__ = 'question'
     id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
-    type = Column(String)
     text = Column(String)
+    is_essay = Column(Boolean)
+    is_multiple_choice = Column(Boolean)
     quiz_id = Column(String, ForeignKey('quiz.id'))
 
     quiz = relationship("Quiz", back_populates="questions")

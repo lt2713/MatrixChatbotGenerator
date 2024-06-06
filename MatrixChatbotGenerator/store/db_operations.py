@@ -364,7 +364,7 @@ def convert_question_model_to_question(db_question):
     ]
     question = Question(
         identifier=db_question.id,
-        question_type=db_question.type,
+        question_type="Essay Question" if db_question.is_essay else "Multiple Choice",
         text=db_question.text,
         answers=answers,
         feedback=feedback,
@@ -380,6 +380,7 @@ def update_last_question(user_id, quiz_id, question_id, room_id, answered=False)
     :param user_id: The ID of the user.
     :param quiz_id: The ID of the quiz.
     :param question_id: The ID of the question.
+    :param room_id: The ID of the room.
     :param answered: Boolean indicating whether the question was answered.
     """
     session = Session()
