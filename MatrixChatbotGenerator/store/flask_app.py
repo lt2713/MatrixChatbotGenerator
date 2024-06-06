@@ -44,7 +44,8 @@ def add_question(quiz_id):
     data = request.get_json()
     new_question = Question(
         quiz_id=quiz_id,
-        type=data['type'],
+        is_essay=['is_essay'],
+        is_multiple_choice=['is_multiple_choice'],
         text=data['text']
     )
     session.add(new_question)
