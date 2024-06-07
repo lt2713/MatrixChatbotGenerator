@@ -30,7 +30,7 @@ class ChatbotGenerator:
         try:
             if progress_callback:
                 progress_callback(0)
-            quiz_id = self.add_transaction_as_quiz_to_db(self.quiz)
+            quiz_id = self.add_quiz_to_db(self.quiz)
             if progress_callback:
                 progress_callback(10)
             total_questions = len(self.quiz.questions)
@@ -51,7 +51,7 @@ class ChatbotGenerator:
         response = requests.get(f'{self.api_url}/quizzes/{quiz_name}', auth=self.auth)
         return response.status_code == 200
 
-    def add_transaction_as_quiz_to_db(self, quiz):
+    def add_quiz_to_db(self, quiz):
         quiz_data = {
             'name': quiz.name,
             'messages_per_day': quiz.msg_per_day
@@ -65,8 +65,9 @@ class ChatbotGenerator:
 
     def add_custom_question_to_db(self, question, quiz_id):
         question_data = {
-            'type': question.type,
             'text': question.text,
+            'is_essay': True if question.type == "Essay Question" else False,
+            'is_multiple_choice': True if question.type != "Essay Question" else False,
             'answers': [{'identifier': ans.identifier, 'text': ans.text, 'is_correct': ans.correct} for ans in
                         question.answers],
             'feedback': [{'identifier': fb.identifier, 'text': fb.text} for fb in question.feedback]
