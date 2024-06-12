@@ -197,11 +197,16 @@ class Quizbot:
         else:
             return "I'm sorry, that didn't work."
 
-    def update_messages_per_day(self, user_id, parm, messages_per_day):
+    def update_messages_per_day(self, user_id, parm):
+        # Find all numbers in the parm string
+        numbers = re.findall(r'\d+', parm)
+
+        # Get the last number in the list of found numbers and convert it to an integer
+        messages_per_day = int(numbers[-1]) if numbers else None
         quiz_id = self.get_quiz_id_by_number_or_name(parm)
         quiz = get_quiz_by_id(quiz_id)
         if not messages_per_day or not isinstance(messages_per_day, int) \
-            or messages_per_day < 0 or messages_per_day > 10:
+                or messages_per_day < 0 or messages_per_day > 10:
             return 'The entered number is not valid'
         if update_messages_per_day(user_id, quiz_id, messages_per_day):
             return f'You will now receive {messages_per_day} messages per day for the quiz "{quiz.name}".'
@@ -259,8 +264,7 @@ class Quizbot:
         message_lower = message.lower()
         words = message_lower.split()
         command = words[0]
-        parameter1 = message[len(words[0]):].strip() if len(words) > 1 else None
-        parameter2 = message[len(words[1]):].strip() if len(words) > 2 else None
+        parameter = message[len(words[0]):].strip() if len(words) > 1 else None
 
         if message.lower().startswith('hello'):
             return "Hello!"
@@ -270,19 +274,19 @@ class Quizbot:
             return self.quizzes_list()
         elif command in ('subscribe', '!subscribe', 'unsubscribe', '!unsubscribe', '!sub', '!unsub'):
             if command in ('subscribe', '!subscribe', '!sub'):
-                return self.subscribe(user_id, room_id, parameter1)
+                return self.subscribe(user_id, room_id, parameter)
             else:
-                return self.unsubscribe(user_id, parameter1)
+                return self.unsubscribe(user_id, parameter)
         elif command == 'subscribed':
             return self.subscribed_quizzes(user_id)
         elif command in ('nextquestion', '!nextquestion', '!nq'):
-            return self.next_question(user_id, parameter1, room_id)
+            return self.next_question(user_id, parameter, room_id)
         elif command in ('delete', '!delete'):
-            return self.delete_quiz(parameter1)
+            return self.delete_quiz(parameter)
         elif command in ('reset', '!reset'):
-            return self.reset_quiz(user_id, parameter1)
+            return self.reset_quiz(user_id, parameter)
         elif command in ('messages', '!messages'):
-            return self.update_messages_per_day(user_id, parameter1, parameter2)
+            return self.update_messages_per_day(user_id, parameter)
         elif has_open_question(user_id, None, room_id):
             return self.process_answer(user_id, message, room_id)
         else:
