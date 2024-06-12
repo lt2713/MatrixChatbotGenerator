@@ -83,10 +83,11 @@ class Quizbot:
         quiz_id = self.get_quiz_id_by_number_or_name(quiz_name)
         if not quiz_id:
             return 'This Quiz does not exist.'
+        quiz = get_quiz_by_id(quiz_id)
         if not is_user_subscribed(user_id, quiz_id):
-            return f'You are not subscribed to the Quiz "{quiz_name}".'
+            return f'You are not subscribed to the Quiz "{quiz.name}".'
         if unsubscribe_user_from_quiz(user_id, quiz_id):
-            return f'You have successfully unsubscribed from the Quiz "{quiz_name}".'
+            return f'You have successfully unsubscribed from the Quiz "{quiz.name}".'
         else:
             return "I'm sorry, that didn't work."
 
