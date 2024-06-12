@@ -205,7 +205,10 @@ class Quizbot:
         messages_per_day = int(numbers[-1]) if numbers else None
         if numbers:
             quiz_name = parm.rsplit(numbers[-1], 1)[0].strip()
+        logger.info(f'messages: {str(messages_per_day)}')
+        logger.info(f'quiz n: {quiz_name}')
         quiz_id = self.get_quiz_id_by_number_or_name(quiz_name)
+        logger.info(f'quiz i: {quiz_id}')
         quiz = get_quiz_by_id(quiz_id)
         if not messages_per_day or not isinstance(messages_per_day, int) \
                 or messages_per_day < 0 or messages_per_day > 10:
