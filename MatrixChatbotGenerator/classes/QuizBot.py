@@ -203,7 +203,9 @@ class Quizbot:
 
         # Get the last number in the list of found numbers and convert it to an integer
         messages_per_day = int(numbers[-1]) if numbers else None
-        quiz_id = self.get_quiz_id_by_number_or_name(parm)
+        if numbers:
+            quiz_name = parm.rsplit(numbers[-1], 1)[0].strip()
+        quiz_id = self.get_quiz_id_by_number_or_name(quiz_name)
         quiz = get_quiz_by_id(quiz_id)
         if not messages_per_day or not isinstance(messages_per_day, int) \
                 or messages_per_day < 0 or messages_per_day > 10:
