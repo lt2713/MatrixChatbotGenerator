@@ -205,14 +205,13 @@ class Quizbot:
         messages_per_day = int(numbers[-1]) if numbers else None
         if numbers:
             quiz_name = parm.rsplit(numbers[-1], 1)[0].strip()
-        logger.info(f'messages: {str(messages_per_day)}')
-        logger.info(f'quiz n: {quiz_name}')
-        quiz_id = self.get_quiz_id_by_number_or_name(quiz_name)
-        logger.info(f'quiz i: {quiz_id}')
-        quiz = get_quiz_by_id(quiz_id)
+            quiz_id = self.get_quiz_id_by_number_or_name(quiz_name)
+            quiz = get_quiz_by_id(quiz_id)
+            if not quiz:
+                return 'I could not find the quiz.'
         if not messages_per_day or not isinstance(messages_per_day, int) \
                 or messages_per_day < 0 or messages_per_day > 10:
-            return 'The entered number is not valid'
+            return 'It seems you entered an invalid number'
         if update_messages_per_day(user_id, quiz_id, messages_per_day):
             return f'You will now receive {messages_per_day} messages per day for the quiz "{quiz.name}".'
         else:

@@ -444,7 +444,6 @@ def update_messages_per_day(user_id, quiz_id, messages_per_day):
         subscription = session.query(user_subscribed_to_quiz).filter_by(user_id=user_id, quiz_id=quiz_id).first()
         if subscription:
             subscription.messages_per_day = messages_per_day
-            session.add(subscription)
             session.commit()
             return True
         else:
