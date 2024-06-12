@@ -4,6 +4,11 @@ from tkinter import ttk
 from tkinter import messagebox
 import os
 import threading
+
+import requests
+from requests.auth import HTTPBasicAuth
+
+from classes.ConfigManager import ConfigManager
 from structures.quiz import Quiz
 from classes.QTIParser import QTIParser
 from classes.ChatbotGenerator import ChatbotGenerator
@@ -15,7 +20,13 @@ class UserInterface:
         self.fileselection = not questions
         if not self.fileselection:
             self.questions = questions
+        cm = ConfigManager()
+        self.config = cm.load_config('Db')
 
+        self.api_url = self.config['Db']['server']
+        self.user = self.config['Db']['user_id']
+        self.password = ConfigManager.decrypt_password(self.config['Db']['password'])
+        self.auth = HTTPBasicAuth(self.user, self.password)
         # MatrixChatbotGenerator
         self.root = tk.Tk()
         # set window title
@@ -33,6 +44,7 @@ class UserInterface:
         file_menu = tk.Menu(self.menu_bar, tearoff=0)
         self.menu_bar.add_cascade(label="File", menu=file_menu)
         file_menu.add_command(label="Edit Db Config", command=self.open_db_config)
+        file_menu.add_command(label="Manage Quizzes", command=self.manage_quizzes)
         # file_menu.add_command(label="Edit Matrix Config", command=self.open_matrix_config)
         file_menu.add_separator()
         file_menu.add_command(label="Exit", command=self.root.quit)
@@ -130,6 +142,89 @@ class UserInterface:
         self.quiz_name_entry.delete(0, tk.END)
         self.msg_per_day_dropdown.current(0)
         self.quiz_name_entry.focus_set()
+
+    def manage_quizzes(self):
+        self.quizzes_window = tk.Toplevel(self.root)
+        self.quizzes_window.title("Manage Quizzes")
+        self.quizzes_window.geometry("600x400")
+
+        # Table headings
+        headings = ["Quiz Name", "Messages Per Day", "Subscribers", "Actions"]
+        for col, heading in enumerate(headings):
+            tk.Label(self.quizzes_window, text=heading).grid(row=0, column=col)
+
+        # Fetch quizzes and display them
+        self.display_quizzes()
+
+    def display_quizzes(self):
+        for widget in self.quizzes_window.winfo_children():
+            widget.destroy()
+
+        headings = ["Quiz Name", "Messages Per Day", "Subscribers", "Actions"]
+        for col, heading in enumerate(headings):
+            tk.Label(self.quizzes_window, text=heading).grid(row=0, column=col)
+
+        response = requests.get(f'{self.api_url}/quizzes', auth=self.auth)
+        quizzes = response.json()
+
+        for row, quiz in enumerate(quizzes, start=1):
+            tk.Label(self.quizzes_window, text=quiz['name']).grid(row=row, column=0)
+            tk.Label(self.quizzes_window, text=quiz['messages_per_day']).grid(row=row, column=1)
+            tk.Label(self.quizzes_window, text=quiz['subscribers']).grid(row=row, column=2)
+
+            edit_button = tk.Button(self.quizzes_window, text="Edit", command=lambda q=quiz: self.edit_quiz(q))
+            edit_button.grid(row=row, column=3)
+
+            delete_button = tk.Button(self.quizzes_window, text="Delete", command=lambda q=quiz: self.delete_quiz(q))
+            delete_button.grid(row=row, column=4)
+
+    def edit_quiz(self, quiz):
+        self.edit_window = tk.Toplevel(self.quizzes_window)
+        # Open a new window to edit the quiz details
+        self.edit_window.title(f"Edit Quiz: {quiz['name']}")
+        self.edit_window.geometry("400x200")
+
+        tk.Label(self.edit_window, text='Quiz Name').grid(row=0, column=0, padx=10, pady=5, sticky='w')
+        quiz_name_entry = tk.Entry(self.edit_window, width=50)
+        quiz_name_entry.grid(row=0, column=1, padx=10, pady=5, sticky='w')
+        quiz_name_entry.insert(0, quiz['name'])
+
+        tk.Label(self.edit_window, text="Messages per day:").grid(row=1, column=0, padx=10, pady=5, sticky='w')
+        msg_per_day_selected = tk.StringVar()
+        msg_per_day_dropdown = ttk.Combobox(self.edit_window, textvariable=msg_per_day_selected,
+                                            values=["1", "2", "3", "4", "5", "6", "7", "8", "9", "10"])
+        msg_per_day_dropdown.grid(row=1, column=1, padx=10, pady=5, sticky='w')
+        msg_per_day_dropdown.set(quiz['messages_per_day'])
+
+        save_button = tk.Button(self.edit_window, text="Save",
+                                command=lambda: self.save_quiz_changes(quiz['id'], quiz_name_entry.get(),
+                                                                       msg_per_day_selected.get()))
+        save_button.grid(row=2, column=0, columnspan=2, pady=10)
+
+    def save_quiz_changes(self, quiz_id, new_name, new_messages_per_day):
+        response = requests.put(f'{self.api_url}/quizzes/{quiz_id}', json={
+            'name': new_name,
+            'messages_per_day': new_messages_per_day
+        }, auth=self.auth)
+        if response.status_code == 200:
+            messagebox.showinfo('Success!', 'Quiz updated successfully.')
+            self.edit_window.destroy()
+            self.display_quizzes()  # Refresh the quiz list
+            self.quizzes_window.lift()
+            self.quizzes_window.focus_force()
+        else:
+            messagebox.showerror('Error', 'Failed to update quiz.')
+
+    def delete_quiz(self, quiz):
+        response = requests.delete(f'{self.api_url}/quizzes/{quiz["id"]}', auth=self.auth)
+        if response.status_code == 200:
+            messagebox.showinfo('Success!', 'Quiz deleted successfully.')
+            self.display_quizzes()
+            self.quizzes_window.lift()
+            self.quizzes_window.focus_force()
+        else:
+            messagebox.showerror('Error', 'Failed to delete quiz.')
+
 
     @staticmethod
     def open_db_config():
