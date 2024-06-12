@@ -35,10 +35,10 @@ class Quizbot:
                 'help \t\t\t\t\t show the help menu\n'
                 'quizzes \t\t\t\t\t show available quizzes\n'
                 'subscribed \t\t\t\t show subscribed quizzes\n'
-                'subscribe quiz\t\t subscribe to given quiz\n'
-                'unsubscribe quiz\t\t unsubscribe from given quiz\n'
-                'nextquestion quiz\t get the next question from given quiz\n'
-                'messages quiz number \t adjust the messages sent per day'
+                'subscribe quiz\t\t\t subscribe to given quiz\n'
+                'unsubscribe quiz\t\t\t unsubscribe from given quiz\n'
+                'nextquestion quiz\t\t get the next question from given quiz\n'
+                'messages quiz number \t adjust the messages sent per day\n'
                 'reset quiz\t\t\t reset the quiz for me \n'
                 'delete quiz\t\t\t delete the quiz\n'
                 )
@@ -51,7 +51,7 @@ class Quizbot:
         result = 'Enter "subscribe" and the quiz number or name to subscribe to a Quiz.\n' \
                  'These are the available quizzes:\n'
         for quiz in quizzes:
-            result += quiz.short_id + ' - ' + quiz.name + '\n'
+            result += str(quiz.short_id) + ' - ' + quiz.name + '\n'
         return result
 
     def subscribe(self, user_id, room_id, parm):
