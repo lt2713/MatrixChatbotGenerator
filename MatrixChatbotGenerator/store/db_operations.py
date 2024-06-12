@@ -191,7 +191,7 @@ def get_quiz_by_id(quiz_id):
     :param quiz_id: The ID of the quiz.
     :return: quiz
     """
-    return session.query(Quiz).filter_by(quiz_id=quiz_id).first()
+    return session.query(Quiz).filter_by(id=quiz_id).first()
 
 
 def get_subscription(quiz_id, user_id):
