@@ -2,7 +2,7 @@ import uuid
 
 from flask import Flask, request, jsonify
 from store.models import Session, Quiz, Question, Answer, Feedback
-
+from store.db_operations import add_quiz_to_db
 app = Flask(__name__)
 ssl_enabled = False
 
@@ -33,9 +33,9 @@ def quiz_exists(quiz_name):
 @app.route('/quizzes', methods=['POST'])
 def add_quiz():
     data = request.get_json()
-    new_quiz = Quiz(name=data['name'], messages_per_day=data['messages_per_day'])
-    session.add(new_quiz)
-    session.commit()
+    new_quiz = Quiz(name=data['name'], messages_per_day=data['messages_per_day'], short_id=0)
+    add_quiz_to_db(None, new_quiz)
+
     return jsonify({'id': new_quiz.id}), 201
 
 

@@ -36,6 +36,7 @@ class Quiz:
         return Quiz(
             id=self.identifier,
             name=self.name,
-            messages_per_day=self.msg_per_day
+            messages_per_day=self.msg_per_day,
+            short_id=0
         )
 

@@ -29,13 +29,17 @@ def add_custom_question_to_db(question, quiz_id):
     session.commit()
 
 
-def add_quiz_to_db(quiz):
+def add_quiz_to_db(quiz=None, quiz_model=None):
     """
-    Adds a quiz to the database.
+    Adds a quiz or a quiz model to the database.
 
     :param quiz: The quiz object to be added as a quiz.
+    :param quiz_model: The quiz_model to be added.
     """
-    quiz_model = quiz.to_db_model()
+    if quiz and not quiz_model:
+        quiz_model = quiz.to_db_model()
+    if not quiz_model:
+        return
     max_short_id = session.query(func.max(Quiz.short_id)).scalar()
     if max_short_id is None:
         max_short_id = 0
