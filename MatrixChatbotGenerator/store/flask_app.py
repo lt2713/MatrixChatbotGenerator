@@ -2,7 +2,7 @@ import uuid
 
 from flask import Flask, request, jsonify
 from store.models import Session, Quiz, Question, Answer, Feedback, user_subscribed_to_quiz
-from store.db_operations import add_quiz_to_db
+from store.db_operations import add_quiz_to_db, delete_quiz_by_id
 app = Flask(__name__)
 ssl_enabled = False
 
@@ -50,8 +50,7 @@ def delete_quiz(quiz_id):
     if not quiz:
         return jsonify({'error': 'Quiz not found'}), 404
 
-    session.delete(quiz)
-    session.commit()
+    delete_quiz_by_id(quiz_id)
     return jsonify({'message': 'Quiz deleted successfully'}), 200
 
 
