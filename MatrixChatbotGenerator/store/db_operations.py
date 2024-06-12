@@ -66,6 +66,17 @@ def get_quiz_id_by_name(quiz_name):
     return quiz.id if quiz else None
 
 
+def get_quiz_id_by_short_id(short_id):
+    """
+    Retrieves the ID of a quiz given its short ID.
+
+    :param short_id: The short ID of the quiz.
+    :return: The ID of the quiz if found, otherwise None.
+    """
+    quiz = session.query(Quiz).filter(Quiz.short_id == short_id).first()
+    return quiz.id if quiz else None
+
+
 def fetch_all_quizzes():
     """
     Fetches all quizzes from the database.

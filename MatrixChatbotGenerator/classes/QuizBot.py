@@ -35,12 +35,12 @@ class Quizbot:
                 'help \t\t\t\t\t show the help menu\n'
                 'quizzes \t\t\t\t\t show available quizzes\n'
                 'subscribed \t\t\t\t show subscribed quizzes\n'
-                'subscribe quiz_name\t\t subscribe to given quiz\n'
-                'unsubscribe quiz_name\t\t unsubscribe from given quiz\n'
-                'nextquestion quiz_name\t get the next question from given quiz\n'
-                'messages quiz_name number \t adjust the messages sent per day'
-                'reset quiz_name\t\t\t reset the quiz for me \n'
-                'delete quiz_name\t\t\t delete the quiz\n'
+                'subscribe quiz\t\t subscribe to given quiz\n'
+                'unsubscribe quiz\t\t unsubscribe from given quiz\n'
+                'nextquestion quiz\t get the next question from given quiz\n'
+                'messages quiz number \t adjust the messages sent per day'
+                'reset quiz\t\t\t reset the quiz for me \n'
+                'delete quiz\t\t\t delete the quiz\n'
                 )
 
     @staticmethod
@@ -48,22 +48,23 @@ class Quizbot:
         quizzes = fetch_all_quizzes()
         if len(quizzes) == 0:
             return 'There are no quizzes available.'
-        result = 'Enter "subscribe" and the quiz name to subscribe to a Quiz.\nThese are the available quizzes:\n'
+        result = 'Enter "subscribe" and the quiz number or name to subscribe to a Quiz.\n' \
+                 'These are the available quizzes:\n'
         for quiz in quizzes:
-            result += '- ' + quiz.name + '\n'
+            result += quiz.short_id + ' - ' + quiz.name + '\n'
         return result
 
-    @staticmethod
-    def subscribe(user_id, room_id, quiz_name):
-        quiz_id = get_quiz_id_by_name(quiz_name)
+    def subscribe(self, user_id, room_id, parm):
+        quiz_id = self.get_quiz_id_by_number_or_name(parm)
         if not quiz_id:
             return 'This Quiz does not exist.'
+        quiz = get_quiz_by_id(quiz_id)
         if not user_exists(user_id):
             create_user(user_id)
         if is_user_subscribed(user_id, quiz_id):
-            return 'You are already subscribed to the Quiz.'
+            return f'You are already subscribed to the Quiz "{quiz.name}".'
         if subscribe_user_to_quiz(user_id, quiz_id, room_id):
-            return f'You have successfully subscribed to the Quiz "{quiz_name}".'
+            return f'You have successfully subscribed to the Quiz "{quiz.name}".'
         else:
             return "I'm sorry, that didn't work."
 
@@ -78,9 +79,8 @@ class Quizbot:
                 response += '- ' + quiz.name + '\n'
         return response
 
-    @staticmethod
-    def unsubscribe(user_id, quiz_name):
-        quiz_id = get_quiz_id_by_name(quiz_name)
+    def unsubscribe(self, user_id, quiz_name):
+        quiz_id = self.get_quiz_id_by_number_or_name(quiz_name)
         if not quiz_id:
             return 'This Quiz does not exist.'
         if not is_user_subscribed(user_id, quiz_id):
@@ -94,11 +94,11 @@ class Quizbot:
         if not quiz_name and count_subscribed_quizzes(user_id) == 1:
             quiz_id = get_subscribed_quizzes(user_id)[0].id
         else:
-            quiz_id = get_quiz_id_by_name(quiz_name)
+            quiz_id = self.get_quiz_id_by_number_or_name(quiz_name)
         if not quiz_id:
             return 'This Quiz does not exist.'
         if not is_user_subscribed(user_id, quiz_id):
-            return f'You are not subscribed to the Quiz "{quiz_name}".'
+            return f'You are not subscribed to this Quiz.'
         if has_open_question(user_id):
             return 'You still have an open question. Please try to answer that first.'
         question = get_unanswered_question(user_id, quiz_id)
@@ -178,9 +178,8 @@ class Quizbot:
                         response += answer.identifier + ') ' + answer.text + '\n'
         return response
 
-    @staticmethod
-    def delete_quiz(quiz_name):
-        quiz_id = get_quiz_id_by_name(quiz_name)
+    def delete_quiz(self, parm):
+        quiz_id = self.get_quiz_id_by_number_or_name(parm)
         if not quiz_id:
             return 'This Quiz does not exist.'
         if delete_quiz_by_id(quiz_id):
@@ -188,9 +187,8 @@ class Quizbot:
         else:
             return "I'm sorry, that didn't work."
 
-    @staticmethod
-    def reset_quiz(user_id, quiz_name):
-        quiz_id = get_quiz_id_by_name(quiz_name)
+    def reset_quiz(self, user_id, parm):
+        quiz_id = self.get_quiz_id_by_number_or_name(parm)
         if not quiz_id:
             return 'This Quiz does not exist.'
         if reset_quiz_by_id(quiz_id, user_id):
@@ -198,18 +196,23 @@ class Quizbot:
         else:
             return "I'm sorry, that didn't work."
 
-    @staticmethod
-    def update_messages_per_day(user_id, quiz_name, messages_per_day):
-        quiz_id = get_quiz_id_by_name(quiz_name)
-        if not quiz_id:
-            return 'This Quiz does not exist.'
+    def update_messages_per_day(self, user_id, parm, messages_per_day):
+        quiz_id = self.get_quiz_id_by_number_or_name(parm)
+        quiz = get_quiz_by_id(quiz_id)
         if not messages_per_day or type(messages_per_day) != "Integer" \
             or messages_per_day < 0 or messages_per_day > 10:
             return 'The entered number is not valid'
         if update_messages_per_day(user_id, quiz_id, messages_per_day):
-            return f'You will now receive {messages_per_day} messages per day for the quiz "{quiz_name}".'
+            return f'You will now receive {messages_per_day} messages per day for the quiz "{quiz.name}".'
         else:
             return "I'm sorry, that didn't work."
+
+    @staticmethod
+    def get_quiz_id_by_number_or_name(parm):
+        quiz_id = get_quiz_id_by_name(parm)
+        if not quiz_id:
+            quiz_id = get_quiz_id_by_short_id(parm)
+        return quiz_id if quiz_id else None
 
     @staticmethod
     def get_users_to_notify():
