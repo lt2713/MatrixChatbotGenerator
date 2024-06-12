@@ -1,5 +1,5 @@
 import uuid
-from sqlalchemy import create_engine, Column, String, Boolean, ForeignKey, Table, Integer, DateTime, func
+from sqlalchemy import create_engine, Column, String, Boolean, ForeignKey, Table, Integer, DateTime, func, event
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship, sessionmaker
 from store import db_config
@@ -55,6 +55,17 @@ class Question(Base):
     users = relationship("User", secondary=user_asked_question, back_populates="questions")
 
 
+# Function to set the short_id before insert
+def set_short_id(mapper, connection, target):
+    # Get the current max short_id from the table
+    if isinstance(target.short_id, int) and target.short_id != 0:
+        return
+    max_short_id = connection.execute("SELECT MAX(short_id) FROM quiz").scalar()
+    if max_short_id is None:
+        max_short_id = 0
+    target.short_id = max_short_id + 1
+
+
 class Answer(Base):
     __tablename__ = 'answer'
     id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
@@ -98,3 +109,6 @@ Base.metadata.create_all(engine)
 # Create a session
 Session = sessionmaker(bind=engine)
 session = Session()
+
+# Attach the set_short_id function to be called before inserting a new Quiz record
+event.listen(Quiz, 'before_insert', set_short_id)
