@@ -38,6 +38,7 @@ class Quizbot:
                 'subscribe quiz_name\t\t subscribe to given quiz\n'
                 'unsubscribe quiz_name\t\t unsubscribe from given quiz\n'
                 'nextquestion quiz_name\t get the next question from given quiz\n'
+                'messages quiz_name number \t adjust the messages sent per day'
                 'reset quiz_name\t\t\t reset the quiz for me \n'
                 'delete quiz_name\t\t\t delete the quiz\n'
                 )
@@ -127,8 +128,9 @@ class Quizbot:
 
         update_user_asked_question(user_id, question.id)
         update_last_question(user_id, open_question.quiz_id, question.id, room_id, True)
+        quiz = get_quiz_by_id(open_question.quiz_id)
         if not get_unanswered_question(user_id, open_question.quiz_id):
-            response += '\nCongratulations, you have completed the quiz.'
+            response += f'\nCongratulations, you have completed the quiz "{quiz.name}".'
             unsubscribe_user_from_quiz(user_id, open_question.quiz_id)
         return response
 
@@ -197,6 +199,19 @@ class Quizbot:
             return "I'm sorry, that didn't work."
 
     @staticmethod
+    def update_messages_per_day(user_id, quiz_name, messages_per_day):
+        quiz_id = get_quiz_id_by_name(quiz_name)
+        if not quiz_id:
+            return 'This Quiz does not exist.'
+        if not messages_per_day or type(messages_per_day) != "Integer" \
+            or messages_per_day < 0 or messages_per_day > 10:
+            return 'The entered number is not valid'
+        if update_messages_per_day(user_id, quiz_id, messages_per_day):
+            return f'You will now receive {messages_per_day} messages per day for the quiz "{quiz_name}".'
+        else:
+            return "I'm sorry, that didn't work."
+
+    @staticmethod
     def get_users_to_notify():
         quizzes = get_all_quizzes()
         users_to_notify = []
@@ -210,7 +225,8 @@ class Quizbot:
                 room_id = get_subscribed_room(user.id, quiz_id)
                 if room_id in notified_rooms:
                     continue
-                if get_asked_questions_count_on_date(user.id, quiz_id, datetime.now()) < messages_per_day \
+                if get_asked_questions_count_on_date(user.id, quiz_id, datetime.now()) < get_messages_per_day(quiz_id,
+                                                                                                              user.id) \
                         and not has_open_question(user.id, quiz_id) \
                         and not has_open_question(user.id, None, room_id):
                     users_to_notify.append((user.id, quiz_id, room_id))
@@ -239,7 +255,8 @@ class Quizbot:
         message_lower = message.lower()
         words = message_lower.split()
         command = words[0]
-        parameter = message[len(words[0]):].strip() if len(words) > 1 else None
+        parameter1 = message[len(words[0]):].strip() if len(words) > 1 else None
+        parameter2 = message[len(words[1]):].strip() if len(words) > 2 else None
 
         if message.lower().startswith('hello'):
             return "Hello!"
@@ -249,17 +266,19 @@ class Quizbot:
             return self.quizzes_list()
         elif command in ('subscribe', '!subscribe', 'unsubscribe', '!unsubscribe', '!sub', '!unsub'):
             if command in ('subscribe', '!subscribe', '!sub'):
-                return self.subscribe(user_id, room_id, parameter)
+                return self.subscribe(user_id, room_id, parameter1)
             else:
-                return self.unsubscribe(user_id, parameter)
+                return self.unsubscribe(user_id, parameter1)
         elif command == 'subscribed':
             return self.subscribed_quizzes(user_id)
         elif command in ('nextquestion', '!nextquestion', '!nq'):
-            return self.next_question(user_id, parameter, room_id)
+            return self.next_question(user_id, parameter1, room_id)
         elif command in ('delete', '!delete'):
-            return self.delete_quiz(parameter)
+            return self.delete_quiz(parameter1)
         elif command in ('reset', '!reset'):
-            return self.reset_quiz(user_id, parameter)
+            return self.reset_quiz(user_id, parameter1)
+        elif command in ('messages', '!messages'):
+            return self.update_messages_per_day(user_id, parameter1, parameter2)
         elif has_open_question(user_id, None, room_id):
             return self.process_answer(user_id, message, room_id)
         else:

@@ -10,7 +10,8 @@ Base = declarative_base()
 user_subscribed_to_quiz = Table('user_subscribed_to_quiz', Base.metadata,
                                 Column('user_id', String, ForeignKey('user.id')),
                                 Column('quiz_id', String, ForeignKey('quiz.id')),
-                                Column('room_id', String)
+                                Column('room_id', String),
+                                Column('messages_per_day', Integer)
                                 )
 
 user_asked_question = Table('user_asked_question', Base.metadata,
@@ -34,6 +35,7 @@ class Quiz(Base):
     id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
     name = Column(String)
     messages_per_day = Column(Integer)
+    short_id = Column(Integer, unique=True, nullable=False)
 
     questions = relationship("Question", back_populates="quiz")
     users = relationship("User", secondary=user_subscribed_to_quiz, back_populates="quizzes")

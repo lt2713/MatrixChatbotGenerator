@@ -8,8 +8,8 @@ Session = sessionmaker(bind=engine)
 session = Session()
 
 
-def create_quiz(quiz_id, name, messages_per_day):
-    quiz = Quiz(id=quiz_id, name=name, messages_per_day=messages_per_day)
+def create_quiz(quiz_id, name, messages_per_day, short_id):
+    quiz = Quiz(id=quiz_id, name=name, messages_per_day=messages_per_day, short_id=short_id)
     session.add(quiz)
     return quiz
 
@@ -33,7 +33,7 @@ def create_feedback(feedback_id, question, identifier, text):
 def create_test_data():
     # Example of adding a quiz and a question
     # Create Math Quiz
-    math_quiz = create_quiz("quiz1", "Math Quiz", messages_per_day=1)
+    math_quiz = create_quiz("quiz1", "Math Quiz", messages_per_day=1, short_id=1)
 
     # Question 1
     math_question1 = create_question("question1", math_quiz, "What is 2 + 2?")
@@ -79,7 +79,7 @@ def create_test_data():
     create_feedback("feedback52", math_question5, "InCorrect", "Wrong! The approximate value of pi is 3.14.")
 
     # Create Python Programming Quiz
-    python_quiz = create_quiz("quiz2", "Python Programming - Beginner", messages_per_day=1)
+    python_quiz = create_quiz("quiz2", "Python Programming - Beginner", messages_per_day=1, short_id=2)
 
     # Question 1
     python_question1 = create_question("python_question1", python_quiz, "Which of the following is a "
@@ -145,6 +145,7 @@ def create_test_data():
 
     # Commit the changes
     session.commit()
+
 
 def main():
     create_test_data()

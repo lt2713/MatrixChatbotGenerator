@@ -29,13 +29,17 @@ def add_custom_question_to_db(question, quiz_id):
     session.commit()
 
 
-def add_transaction_as_quiz_to_db(quiz):
+def add_quiz_to_db(quiz):
     """
     Adds a quiz to the database.
 
     :param quiz: The quiz object to be added as a quiz.
     """
     quiz_model = quiz.to_db_model()
+    max_short_id = session.query(func.max(Quiz.short_id)).scalar()
+    if max_short_id is None:
+        max_short_id = 0
+    quiz_model.short_id = max_short_id + 1
     session.add(quiz_model)
     session.commit()
 
@@ -137,6 +141,7 @@ def is_user_subscribed(user_id, quiz_id):
     """
     return session.query(user_subscribed_to_quiz).filter_by(user_id=user_id, quiz_id=quiz_id).count() > 0
 
+
 def get_subscribed_room(user_id, quiz_id):
     """
     Gets the room a user subscribed to a specific quiz.
@@ -159,6 +164,46 @@ def count_subscribed_quizzes(user_id):
     return session.query(user_subscribed_to_quiz).filter_by(user_id=user_id).count()
 
 
+def count_subscribers(quiz_id):
+    """
+    Counts the number of users subscribed to a quiz..
+
+    :param quiz_id: The ID of the quiz.
+    :return: The number of users subscribed to a quiz.
+    """
+    return session.query(user_subscribed_to_quiz).filter_by(quiz_id=quiz_id).count()
+
+
+def get_quiz_by_id(quiz_id):
+    """
+    Returns the quiz object for an id.
+    :param quiz_id: The ID of the quiz.
+    :return: quiz
+    """
+    return session.query(Quiz).filter_by(quiz_id=quiz_id).first()
+
+
+def get_subscription(quiz_id, user_id):
+    """
+    Returns the subscription for a quiz and user.
+    :param quiz_id: The ID of the quiz.
+    :param user_id: The ID of the user.
+    :return: subscription
+    """
+    return session.query(user_subscribed_to_quiz).filter_by(quiz_id=quiz_id, user_id=user_id).first()
+
+
+def get_messages_per_day(quiz_id, user_id):
+    """
+    Returns the messages per day to be sent for a quiz and user.
+    :param quiz_id: The ID of the quiz.
+    :param user_id: The ID of the user.
+    :return: Messages per day
+    """
+    subscription = get_subscription(quiz_id, user_id)
+    messages_per_day = subscription.messages_per_day if subscription else 0
+    return messages_per_day
+
 def get_all_quizzes():
     """
     Counts the number of quizzes a user is subscribed to.
@@ -180,7 +225,10 @@ def subscribe_user_to_quiz(user_id, quiz_id, room_id):
     """
     if not is_user_subscribed(user_id, quiz_id):
         try:
-            session.execute(user_subscribed_to_quiz.insert().values(user_id=user_id, quiz_id=quiz_id, room_id=room_id))
+            quiz = get_quiz_by_id(quiz_id)
+            messages_per_day = quiz.messages_per_day
+            session.execute(user_subscribed_to_quiz.insert().values(user_id=user_id, quiz_id=quiz_id, room_id=room_id,
+                                                                    messages_per_day=messages_per_day))
             session.commit()
         except Exception as e:
             session.rollback()
@@ -370,6 +418,31 @@ def convert_question_model_to_question(db_question):
         key=db_question.id
     )
     return question
+
+
+def update_messages_per_day(user_id, quiz_id, messages_per_day):
+    """
+    Updates the messages per day field for a subscription.
+    :param user_id: The Id of the user.
+    :param quiz_id: The Id of the quiz.
+    :param messages_per_day: Number of messages to be sent per day
+    :return: True if updated, False if not updated
+    """
+    session = Session()
+    try:
+        subscription = session.query(user_subscribed_to_quiz).filter_by(user_id=user_id, quiz_id=quiz_id).first()
+        if subscription:
+            subscription.messages_per_day = messages_per_day
+            session.add(subscription)
+            session.commit()
+            return True
+        else:
+            return False
+
+    except Exception as e:
+        session.rollback()
+        logger.error(f"An error occurred in {util.current_function_name()}: {e}")
+        return False
 
 
 def update_last_question(user_id, quiz_id, question_id, room_id, answered=False):
