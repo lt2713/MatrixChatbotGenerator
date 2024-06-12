@@ -200,7 +200,7 @@ class Quizbot:
     def update_messages_per_day(self, user_id, parm, messages_per_day):
         quiz_id = self.get_quiz_id_by_number_or_name(parm)
         quiz = get_quiz_by_id(quiz_id)
-        if not messages_per_day or type(messages_per_day) != "Integer" \
+        if not messages_per_day or not isinstance(messages_per_day, int) \
             or messages_per_day < 0 or messages_per_day > 10:
             return 'The entered number is not valid'
         if update_messages_per_day(user_id, quiz_id, messages_per_day):
