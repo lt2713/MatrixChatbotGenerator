@@ -1,6 +1,6 @@
 from store.models import Base, User, Quiz, Question as DbQuestion, Answer as DbAnswer, Feedback as DbFeedback,  \
     LastQuestion, user_subscribed_to_quiz, user_asked_question
-from sqlalchemy import create_engine, exists, func, select
+from sqlalchemy import create_engine, exists, func, select, update
 from sqlalchemy.orm import sessionmaker
 from store import db_config
 from structures.question import Question
@@ -441,10 +441,19 @@ def update_messages_per_day(user_id, quiz_id, messages_per_day):
     """
     session = Session()
     try:
-        subscription = session.query(user_subscribed_to_quiz).filter_by(user_id=user_id, quiz_id=quiz_id).first()
-        if subscription:
-            subscription.messages_per_day = messages_per_day
-            session.commit()
+        stmt = (
+            update(user_subscribed_to_quiz).
+            where(user_subscribed_to_quiz.c.user_id == user_id).
+            where(user_subscribed_to_quiz.c.quiz_id == quiz_id).
+            values(messages_per_day=messages_per_day)
+        )
+
+        # Execute the update statement
+        result = session.execute(stmt)
+        session.commit()
+
+        # Check if any row was updated
+        if result.rowcount > 0:
             return True
         else:
             return False
