@@ -1,7 +1,7 @@
 import uuid
 
 from flask import Flask, request, jsonify
-from store.models import Session, Quiz, Question, Answer, Feedback
+from store.models import Session, Quiz, Question, Answer, Feedback, user_subscribed_to_quiz
 from store.db_operations import add_quiz_to_db
 app = Flask(__name__)
 ssl_enabled = False
@@ -13,13 +13,46 @@ session = Session()
 @app.route('/quizzes', methods=['GET'])
 def fetch_all_quizzes():
     quizzes = session.query(Quiz).all()
-    return jsonify([{'id': quiz.id, 'name': quiz.name, 'messages_per_day': quiz.messages_per_day} for quiz in quizzes])
+    quizzes_with_subscribers = []
+    for quiz in quizzes:
+        subscriber_count = session.query(user_subscribed_to_quiz).filter_by(quiz_id=quiz.id).count()
+        quizzes_with_subscribers.append({
+            'id': quiz.id,
+            'name': quiz.name,
+            'messages_per_day': quiz.messages_per_day,
+            'subscribers': subscriber_count
+        })
+    return jsonify(quizzes_with_subscribers)
 
 
 @app.route('/quiz/<quiz_id>/questions', methods=['GET'])
 def fetch_questions_for_quiz(quiz_id):
     questions = session.query(Question).filter_by(quiz_id=quiz_id).all()
     return jsonify([{'id': question.id, 'type': question.type, 'text': question.text} for question in questions])
+
+
+@app.route('/quizzes/<quiz_id>', methods=['PUT'])
+def update_quiz(quiz_id):
+    data = request.get_json()
+    quiz = session.query(Quiz).filter_by(id=quiz_id).first()
+    if not quiz:
+        return jsonify({'error': 'Quiz not found'}), 404
+
+    quiz.name = data['name']
+    quiz.messages_per_day = data['messages_per_day']
+    session.commit()
+    return jsonify({'message': 'Quiz updated successfully'}), 200
+
+
+@app.route('/quizzes/<quiz_id>', methods=['DELETE'])
+def delete_quiz(quiz_id):
+    quiz = session.query(Quiz).filter_by(id=quiz_id).first()
+    if not quiz:
+        return jsonify({'error': 'Quiz not found'}), 404
+
+    session.delete(quiz)
+    session.commit()
+    return jsonify({'message': 'Quiz deleted successfully'}), 200
 
 
 @app.route('/quizzes/<quiz_name>', methods=['GET'])
