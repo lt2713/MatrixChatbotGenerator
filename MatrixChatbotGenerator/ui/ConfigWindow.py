@@ -1,7 +1,5 @@
 import tkinter as tk
 from tkinter import messagebox
-import configparser
-import os
 
 from classes.ConfigManager import ConfigManager
 from util.http_handler import HttpHandler

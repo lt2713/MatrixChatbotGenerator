@@ -1,7 +1,4 @@
-import requests
-from requests.auth import HTTPBasicAuth
-
-from classes.ConfigManager import ConfigManager
+from util.http_handler import HttpHandler
 from structures.quiz import Quiz
 
 
@@ -12,13 +9,7 @@ class ChatbotGenerator:
         else:
             self.quiz = None
         self.message = ' '
-        cm = ConfigManager()
-        self.config = cm.load_config('Db')
-
-        self.api_url = url if url else self.config['Db']['server']
-        self.user = user if user else self.config['Db']['user_id']
-        self.password = password if password else ConfigManager.decrypt_password(self.config['Db']['password'])
-        self.auth = HTTPBasicAuth(self.user, self.password)
+        self.hh = HttpHandler(url if url else None, user if user else None, password if password else None)
 
     def start(self, progress_callback=None):
         if not self.quiz or len(self.quiz.questions) == 0:
@@ -48,7 +39,7 @@ class ChatbotGenerator:
         return self.message
 
     def quiz_exists(self, quiz_name):
-        response = requests.get(f'{self.api_url}/quizzes/{quiz_name}', auth=self.auth)
+        response = self.hh.get(f'/quizzes/{quiz_name}')
         return response.status_code == 200
 
     def add_quiz_to_db(self, quiz):
@@ -56,7 +47,7 @@ class ChatbotGenerator:
             'name': quiz.name,
             'messages_per_day': quiz.msg_per_day
         }
-        response = requests.post(f'{self.api_url}/quizzes', json=quiz_data, auth=self.auth)
+        response = self.hh.post('/quizzes', quiz_data)
         if response.status_code != 201:
             print(response)
             print(response.content)
@@ -72,7 +63,7 @@ class ChatbotGenerator:
                         question.answers],
             'feedback': [{'identifier': fb.identifier, 'text': fb.text} for fb in question.feedback]
         }
-        response = requests.post(f'{self.api_url}/quizzes/{quiz_id}/questions', json=question_data, auth=self.auth)
+        response = self.hh.post(f'/quizzes/{quiz_id}/questions', question_data)
         if response.status_code != 201:
             raise Exception('Failed to add question')
 

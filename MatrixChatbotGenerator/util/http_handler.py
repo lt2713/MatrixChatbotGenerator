@@ -19,7 +19,15 @@ class HttpHandler:
         return response
 
     def post(self, path, data):
-        response = requests.post(path, json=data, auth=self.auth)
+        response = requests.post(f'{self.api_url}{path}', json=data, auth=self.auth)
+        return response
+
+    def put(self, path, data):
+        response = requests.put(f'{self.api_url}{path}', json=data, auth=self.auth)
+        return response
+
+    def delete(self, path):
+        response = requests.delete(f'{self.api_url}{path}', auth=self.auth)
         return response
 
     def test_connection(self):

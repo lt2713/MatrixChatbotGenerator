@@ -5,14 +5,11 @@ from tkinter import messagebox
 import os
 import threading
 
-import requests
-from requests.auth import HTTPBasicAuth
-
-from classes.ConfigManager import ConfigManager
 from structures.quiz import Quiz
 from classes.QTIParser import QTIParser
 from classes.ChatbotGenerator import ChatbotGenerator
 from ui.ConfigWindow import ConfigWindow
+from util.http_handler import HttpHandler
 
 
 class UserInterface:
@@ -20,13 +17,8 @@ class UserInterface:
         self.fileselection = not questions
         if not self.fileselection:
             self.questions = questions
-        cm = ConfigManager()
-        self.config = cm.load_config('Db')
 
-        self.api_url = self.config['Db']['server']
-        self.user = self.config['Db']['user_id']
-        self.password = ConfigManager.decrypt_password(self.config['Db']['password'])
-        self.auth = HTTPBasicAuth(self.user, self.password)
+        self.hh = HttpHandler()
         # MatrixChatbotGenerator
         self.root = tk.Tk()
         # set window title
@@ -164,7 +156,7 @@ class UserInterface:
         for col, heading in enumerate(headings):
             tk.Label(self.quizzes_window, text=heading).grid(row=0, column=col)
 
-        response = requests.get(f'{self.api_url}/quizzes', auth=self.auth)
+        response = self.hh.get('/quizzes')
         quizzes = response.json()
 
         for row, quiz in enumerate(quizzes, start=1):
@@ -202,10 +194,11 @@ class UserInterface:
         save_button.grid(row=2, column=0, columnspan=2, pady=10)
 
     def save_quiz_changes(self, quiz_id, new_name, new_messages_per_day):
-        response = requests.put(f'{self.api_url}/quizzes/{quiz_id}', json={
+        data = {
             'name': new_name,
             'messages_per_day': new_messages_per_day
-        }, auth=self.auth)
+        }
+        response = self.hh.put(f'/quizzes/{quiz_id}', data)
         if response.status_code == 200:
             messagebox.showinfo('Success!', 'Quiz updated successfully.')
             self.edit_window.destroy()
@@ -216,7 +209,7 @@ class UserInterface:
             messagebox.showerror('Error', 'Failed to update quiz.')
 
     def delete_quiz(self, quiz):
-        response = requests.delete(f'{self.api_url}/quizzes/{quiz["id"]}', auth=self.auth)
+        response = self.hh.delete(f'/quizzes/{quiz["id"]}')
         if response.status_code == 200:
             messagebox.showinfo('Success!', 'Quiz deleted successfully.')
             self.display_quizzes()
@@ -224,7 +217,6 @@ class UserInterface:
             self.quizzes_window.focus_force()
         else:
             messagebox.showerror('Error', 'Failed to delete quiz.')
-
 
     @staticmethod
     def open_db_config():
