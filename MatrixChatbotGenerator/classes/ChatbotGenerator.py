@@ -39,8 +39,11 @@ class ChatbotGenerator:
         return self.message
 
     def quiz_exists(self, quiz_name):
-        response = self.hh.get(f'/quizzes/{quiz_name}')
-        return response.status_code == 200
+        quizzes = self.hh.get('/quizzes/')
+        for quiz in quizzes:
+            if quiz['name'] == quiz_name:
+                return True
+        return False
 
     def add_quiz_to_db(self, quiz):
         quiz_data = {

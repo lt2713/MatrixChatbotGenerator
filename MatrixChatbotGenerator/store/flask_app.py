@@ -5,6 +5,7 @@ from store.models import Quiz, Question, Answer, Feedback
 from store.db_operations import get_all_quizzes, count_subscribers, get_all_questions_for_quiz, get_quiz_by_id, \
     update_quiz_attributes, delete_quiz_by_id, add_quiz_to_db, add_db_question_to_db, add_db_answer_to_db, \
     add_db_feedback_to_db
+
 app = Flask(__name__)
 ssl_enabled = False
 
@@ -53,14 +54,6 @@ def delete_quiz(quiz_id):
 
     delete_quiz_by_id(quiz_id)
     return jsonify({'message': 'Quiz deleted successfully'}), 200
-
-
-@app.route('/quizzes/<quiz_name>', methods=['GET'])
-def quiz_exists(quiz_name):
-    quiz_id = quiz_exists(quiz_name)
-    if quiz_id:
-        return jsonify({'id': quiz_id}), 200
-    return jsonify({'error': 'Quiz not found'}), 404
 
 
 @app.route('/quizzes', methods=['POST'])
