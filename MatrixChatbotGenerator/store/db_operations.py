@@ -444,7 +444,7 @@ def update_messages_per_day(user_id, quiz_id, messages_per_day):
         return False
 
 
-def update_quiz(quiz_id, name, messages_per_day):
+def update_quiz_attributes(quiz_id, name, messages_per_day):
     """
     Updates the name and messages_per_day attributes of a quiz identified by quiz_id.
 

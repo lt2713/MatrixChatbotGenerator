@@ -37,8 +37,10 @@ def update_quiz(quiz_id):
 
     quiz.name = data['name']
     quiz.messages_per_day = data['messages_per_day']
-    update_quiz(quiz_id, quiz.name, quiz.messages_per_day)
-    return jsonify({'message': 'Quiz updated successfully'}), 200
+    if update_quiz_attributes(quiz_id, quiz.name, quiz.messages_per_day):
+        return jsonify({'message': 'Quiz updated successfully'}), 200
+    else:
+        return jsonify({'error': 'Quiz not updated'}), 400
 
 
 @app.route('/quizzes/<quiz_id>', methods=['DELETE'])
