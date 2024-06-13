@@ -39,7 +39,8 @@ class ChatbotGenerator:
         return self.message
 
     def quiz_exists(self, quiz_name):
-        quizzes = self.hh.get('/quizzes/')
+        response = self.hh.get('/quizzes')
+        quizzes = response.json()
         for quiz in quizzes:
             if quiz['name'] == quiz_name:
                 return True
