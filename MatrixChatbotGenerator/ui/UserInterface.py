@@ -138,7 +138,7 @@ class UserInterface:
 
     def open_quizzes_window(self):
         quizzes_window = QuizzesWindow(self.root, self.hh)
-        quizzes_window.manage_quizzes()
+        quizzes_window.loop()
 
     @staticmethod
     def open_db_config():
