@@ -44,8 +44,8 @@ class QuizzesWindow:
 
     def create_headings(self):
         for col, heading in enumerate(self.headings):
-            tk.Label(self.table_frame, text=heading, padx=10, pady=5,
-                     font=('Arial', 10)).grid(row=0, column=col, sticky='ew')
+            tk.Label(self.table_frame, text=heading, padx=15, pady=5,
+                     font=('Arial', 9)).grid(row=0, column=col, sticky='ew')
         self.table_frame.grid_columnconfigure(0, weight=1)
         self.table_frame.grid_columnconfigure(len(self.headings) - 1, weight=1)
         ttk.Separator(self.table_frame, orient='horizontal').grid(row=1, column=0, columnspan=len(self.headings)+2,
