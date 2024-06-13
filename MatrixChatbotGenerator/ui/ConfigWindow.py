@@ -3,10 +3,8 @@ from tkinter import messagebox
 import configparser
 import os
 
-import requests
-from requests.auth import HTTPBasicAuth
-
 from classes.ConfigManager import ConfigManager
+from util.http_handler import HttpHandler
 
 
 class ConfigWindow:
@@ -35,13 +33,13 @@ class ConfigWindow:
         pw = ConfigManager.decrypt_password(self.config['Db']['password'])
         self.password_entry.insert(0, pw)
 
-        tk.Button(self.root, text="Cancel", command=self.root.destroy).grid(row=3, column=0, padx=10,
+        tk.Button(self.root, text="Cancel", command=self.root.destroy).grid(row=4, column=0, padx=10,
                                                                             pady=10, sticky='e')
-        tk.Button(self.root, text="Save", command=self.on_save).grid(row=3, column=1, padx=10, pady=10, sticky='w')
+        tk.Button(self.root, text="Save", command=self.on_save).grid(row=4, column=1, padx=10, pady=10, sticky='w')
 
         if config_name == 'Db':
-            tk.Button(self.root, text="Test Connection", command=self.test_connection).grid(row=4, column=1, padx=10,
-                                                                                        pady=10, sticky='w')
+            tk.Button(self.root, text="Test Connection", command=self.test_connection).grid(row=3, column=1, padx=10,
+                                                                                            pady=10, sticky='w')
 
     def on_save(self):
         server = self.server_entry.get().strip()
@@ -49,7 +47,7 @@ class ConfigWindow:
         password = self.password_entry.get().strip()
 
         if not server or not user_id or not password:
-            messagebox.showerror("Input Error", "All fields are required.")
+            self.show_message("error", "Error", "All fields are required.")
             return
 
         encrypted_password = ConfigManager.encrypt_password(password)
@@ -57,7 +55,7 @@ class ConfigWindow:
         self.config[self.config_name]['user_id'] = user_id
         self.config[self.config_name]['password'] = encrypted_password
         ConfigManager.save_config(self.config)
-        messagebox.showinfo("Success", "Configuration saved successfully.")
+        self.show_message("info", "Success", "Configuration saved successfully.")
         self.root.destroy()
 
     def loop(self):
@@ -67,22 +65,27 @@ class ConfigWindow:
             print(f'An Error occurred in the config window: {e}')
 
     def test_connection(self):
-        server = self.server_entry.get().strip()
-        user_id = self.user_id_entry.get().strip()
-        password = self.password_entry.get().strip()
-
-        if not server or not user_id or not password:
-            messagebox.showerror("Input Error", "All fields are required.")
+        if not self.server_entry.get().strip() \
+                or not self.user_id_entry.get().strip() \
+                or not self.password_entry.get().strip():
+            self.show_message("error", "Error", "All fields are required.")
             return
-
+        hh = HttpHandler(self.server_entry.get().strip(), self.user_id_entry.get().strip(),
+                         self.password_entry.get().strip())
         try:
-            response = requests.get(f'{server}/helloworld', auth=HTTPBasicAuth(user_id, password))
+            response = hh.get('/helloworld')
             if response.status_code == 200:
-                messagebox.showinfo("Success", "Connection successful!")
+                self.show_message("info", "Success", "Connection successful!")
             else:
-                messagebox.showerror("Error", f"Connection failed: {response.status_code}")
+                self.show_message("error", "Error", f"Connection failed: {response.status_code}")
         except Exception as e:
-            messagebox.showerror("Error", f"Connection failed: {e}")
+            self.show_message("error", "Error", f"Connection failed: {e}")
+
+    def show_message(self, message_type, title, message):
+        if message_type == "info":
+            messagebox.showinfo(title, message, parent=self.root)
+        elif message_type == "error":
+            messagebox.showerror(title, message, parent=self.root)
 
 
 if __name__ == '__main__':
