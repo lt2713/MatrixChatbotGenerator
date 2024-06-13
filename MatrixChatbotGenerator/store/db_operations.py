@@ -403,12 +403,22 @@ def count_subscribed_quizzes(user_id):
 
 def count_subscribers(quiz_id):
     """
-    Counts the number of users subscribed to a quiz..
+    Counts the number of users subscribed to a quiz.
 
     :param quiz_id: The ID of the quiz.
     :return: The number of users subscribed to a quiz.
     """
     return session.query(user_subscribed_to_quiz).filter_by(quiz_id=quiz_id).count()
+
+
+def count_questions(quiz_id):
+    """
+    Counts the number of questions of a quiz.
+
+    :param quiz_id: The ID of the quiz.
+    :return: The number of questions of a quiz
+    """
+    return session.query(Question).filter_by(quiz_id=quiz_id).count()
 
 
 def update_messages_per_day(user_id, quiz_id, messages_per_day):

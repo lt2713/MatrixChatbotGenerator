@@ -4,7 +4,7 @@ from flask import Flask, request, jsonify
 from store.models import Quiz, Question, Answer, Feedback
 from store.db_operations import get_all_quizzes, count_subscribers, get_all_questions_for_quiz, get_quiz_by_id, \
     update_quiz_attributes, delete_quiz_by_id, add_quiz_to_db, add_db_question_to_db, add_db_answer_to_db, \
-    add_db_feedback_to_db
+    add_db_feedback_to_db, count_questions
 
 app = Flask(__name__)
 ssl_enabled = False
@@ -16,11 +16,13 @@ def fetch_all_quizzes():
     quizzes_with_subscribers = []
     for quiz in quizzes:
         subscriber_count = count_subscribers(quiz.id)
+        question_count = count_questions(quiz.id)
         quizzes_with_subscribers.append({
             'id': quiz.id,
             'name': quiz.name,
             'messages_per_day': quiz.messages_per_day,
-            'subscribers': subscriber_count
+            'subscribers': subscriber_count,
+            'questions': question_count
         })
     return jsonify(quizzes_with_subscribers)
 
