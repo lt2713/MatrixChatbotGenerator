@@ -1,21 +1,18 @@
 import uuid
 
 from flask import Flask, request, jsonify
-from store.models import Session, Quiz, Question, Answer, Feedback, user_subscribed_to_quiz
-from store.db_operations import add_quiz_to_db, delete_quiz_by_id
+from store.models import Question, Answer, Feedback
+from store.db_operations import *
 app = Flask(__name__)
 ssl_enabled = False
-
-# Use the existing session from models.py
-session = Session()
 
 
 @app.route('/quizzes', methods=['GET'])
 def fetch_all_quizzes():
-    quizzes = session.query(Quiz).all()
+    quizzes = get_all_quizzes()
     quizzes_with_subscribers = []
     for quiz in quizzes:
-        subscriber_count = session.query(user_subscribed_to_quiz).filter_by(quiz_id=quiz.id).count()
+        subscriber_count = count_subscribers(quiz.id)
         quizzes_with_subscribers.append({
             'id': quiz.id,
             'name': quiz.name,
@@ -27,26 +24,26 @@ def fetch_all_quizzes():
 
 @app.route('/quiz/<quiz_id>/questions', methods=['GET'])
 def fetch_questions_for_quiz(quiz_id):
-    questions = session.query(Question).filter_by(quiz_id=quiz_id).all()
+    questions = get_all_questions_for_quiz(quiz_id)
     return jsonify([{'id': question.id, 'type': question.type, 'text': question.text} for question in questions])
 
 
 @app.route('/quizzes/<quiz_id>', methods=['PUT'])
 def update_quiz(quiz_id):
     data = request.get_json()
-    quiz = session.query(Quiz).filter_by(id=quiz_id).first()
+    quiz = get_quiz_by_id(quiz_id)
     if not quiz:
         return jsonify({'error': 'Quiz not found'}), 404
 
     quiz.name = data['name']
     quiz.messages_per_day = data['messages_per_day']
-    session.commit()
+    update_quiz(quiz_id, quiz.name, quiz.messages_per_day)
     return jsonify({'message': 'Quiz updated successfully'}), 200
 
 
 @app.route('/quizzes/<quiz_id>', methods=['DELETE'])
 def delete_quiz(quiz_id):
-    quiz = session.query(Quiz).filter_by(id=quiz_id).first()
+    quiz = get_quiz_by_id(quiz_id)
     if not quiz:
         return jsonify({'error': 'Quiz not found'}), 404
 
@@ -56,9 +53,9 @@ def delete_quiz(quiz_id):
 
 @app.route('/quizzes/<quiz_name>', methods=['GET'])
 def quiz_exists(quiz_name):
-    quiz = session.query(Quiz).filter_by(name=quiz_name).first()
-    if quiz:
-        return jsonify({'id': quiz.id}), 200
+    quiz_id = quiz_exists(quiz_name)
+    if quiz_id:
+        return jsonify({'id': quiz_id}), 200
     return jsonify({'error': 'Quiz not found'}), 404
 
 
@@ -80,8 +77,7 @@ def add_question(quiz_id):
         is_essay=data['is_essay'],
         is_multiple_choice=data['is_multiple_choice']
     )
-    session.add(new_question)
-    session.commit()
+    add_db_question_to_db(new_question)
 
     # Add answers
     for answer in data.get('answers', []):
@@ -92,7 +88,7 @@ def add_question(quiz_id):
             is_correct=answer['is_correct'],
             question_id=new_question.id
         )
-        session.add(new_answer)
+        add_db_answer_to_db(new_answer)
 
     # Add feedbacks
     for feedback in data.get('feedback', []):
@@ -102,9 +98,8 @@ def add_question(quiz_id):
             text=feedback['text'],
             question_id=new_question.id
         )
-        session.add(new_feedback)
+        add_db_feedback_to_db(new_feedback)
 
-    session.commit()
     return jsonify({'id': new_question.id}), 201
 
 

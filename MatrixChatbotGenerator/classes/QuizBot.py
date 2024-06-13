@@ -45,7 +45,7 @@ class Quizbot:
 
     @staticmethod
     def quizzes_list():
-        quizzes = fetch_all_quizzes()
+        quizzes = get_all_quizzes()
         if len(quizzes) == 0:
             return 'There are no quizzes available.'
         result = 'Enter "subscribe" and the quiz number or name to subscribe to a Quiz.\n' \
