@@ -11,6 +11,8 @@ class QuizzesWindow:
         self.quizzes_window = tk.Toplevel(self.root)
         self.quizzes_window.title("Manage Quizzes")
         self.quizzes_window.geometry("600x400")
+        response = self.hh.get('/quizzes')
+        self.quizzes = response.json()
 
         # Table headings
         headings = ["Quiz Name", "Messages Per Day", "Subscribers", "Actions"]
@@ -32,10 +34,9 @@ class QuizzesWindow:
         self.fill_list()
 
     def fill_list(self):
-        response = self.hh.get('/quizzes')
-        quizzes = response.json()
-
-        for row, quiz in enumerate(quizzes, start=1):
+        if not self.quizzes:
+            self.refresh()
+        for row, quiz in enumerate(self.quizzes, start=1):
             tk.Label(self.quizzes_window, text=quiz['name']).grid(row=row, column=0)
             tk.Label(self.quizzes_window, text=quiz['messages_per_day']).grid(row=row, column=1)
             tk.Label(self.quizzes_window, text=quiz['subscribers']).grid(row=row, column=2)
@@ -56,9 +57,14 @@ class QuizzesWindow:
         else:
             self.show_message('error', 'Error', 'Failed to delete quiz.')
 
+    def refresh(self):
+        response = self.hh.get('/quizzes')
+        self.quizzes = response.json()
+
     def edit_quiz(self, quiz):
         qw = QuizWindow(self.quizzes_window, self.hh, quiz)
         qw.loop()
+        self.refresh()
 
     def show_message(self, message_type, title, message):
         if message_type == "info":

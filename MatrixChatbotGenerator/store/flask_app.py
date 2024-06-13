@@ -40,9 +40,9 @@ def update_quiz(quiz_id):
     if not quiz:
         return jsonify({'error': 'Quiz not found'}), 404
 
-    quiz.name = data['name']
-    quiz.messages_per_day = data['messages_per_day']
-    if update_quiz_attributes(quiz_id, quiz.name, quiz.messages_per_day):
+    name = data['name']
+    messages_per_day = data['messages_per_day']
+    if update_quiz_attributes(quiz_id, name, messages_per_day):
         return jsonify({'message': 'Quiz updated successfully'}), 200
     else:
         return jsonify({'error': 'Quiz not updated'}), 400
