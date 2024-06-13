@@ -1,8 +1,10 @@
 import uuid
 
 from flask import Flask, request, jsonify
-from store.models import Question, Answer, Feedback
-from store.db_operations import *
+from store.models import Quiz, Question, Answer, Feedback
+from store.db_operations import get_all_quizzes, count_subscribers, get_all_questions_for_quiz, get_quiz_by_id, \
+    update_quiz_attributes, delete_quiz_by_id, add_quiz_to_db, add_db_question_to_db, add_db_answer_to_db, \
+    add_db_feedback_to_db
 app = Flask(__name__)
 ssl_enabled = False
 
