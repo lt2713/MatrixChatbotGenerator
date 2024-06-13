@@ -418,7 +418,7 @@ def count_questions(quiz_id):
     :param quiz_id: The ID of the quiz.
     :return: The number of questions of a quiz
     """
-    return session.query(Question).filter_by(quiz_id=quiz_id).count()
+    return session.query(DbQuestion).filter_by(quiz_id=quiz_id).count()
 
 
 def update_messages_per_day(user_id, quiz_id, messages_per_day):
