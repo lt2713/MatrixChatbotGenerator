@@ -1,5 +1,4 @@
 import uuid
-from store.models import Quiz
 from structures.question import Question
 
 
@@ -31,12 +30,4 @@ class Quiz:
         for question in self.questions:
             print('\n')
             question.print_short()
-
-    def to_db_model(self):
-        return Quiz(
-            id=self.identifier,
-            name=self.name,
-            messages_per_day=self.msg_per_day,
-            short_id=0
-        )
 

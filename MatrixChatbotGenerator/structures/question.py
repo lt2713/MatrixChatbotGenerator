@@ -2,7 +2,6 @@ import string
 import uuid
 from structures.answer import Answer
 from structures.feedback import Feedback
-from store.models import Question as DbQuestion
 
 
 class Question:
@@ -88,18 +87,6 @@ class Question:
             for answer in self.answers:
                 result = result + answer.get()
         return result
-
-    def to_db_model(self, quiz_id):
-        question = DbQuestion(
-            id=self.id,
-            text=self.text,
-            quiz_id=quiz_id,
-            is_essay=True if self.type == "Essay Question" else False,
-            is_multiple_choice=True if self.type != "Essay Question" else False
-        )
-        question.answers = [answer.to_db_model(question.id) for answer in self.answers]
-        question.feedback = [feedback.to_db_model(question.id) for feedback in self.feedback]
-        return question
 
     @staticmethod
     def valid_types():

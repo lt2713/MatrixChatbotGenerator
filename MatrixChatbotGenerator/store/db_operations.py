@@ -1,8 +1,9 @@
-from store.models import Base, User, Quiz, Question as DbQuestion, Answer as DbAnswer, Feedback as DbFeedback,  \
-    LastQuestion, user_subscribed_to_quiz, user_asked_question
+from store.models import Base, User, Quiz as DbQuiz, Question as DbQuestion, Answer as DbAnswer, \
+    Feedback as DbFeedback, LastQuestion, user_subscribed_to_quiz, user_asked_question
 from sqlalchemy import create_engine, exists, func, select, update
 from sqlalchemy.orm import sessionmaker
 from store import db_config
+from structures.quiz import Quiz
 from structures.question import Question
 from structures.answer import Answer
 from structures.feedback import Feedback
@@ -17,6 +18,47 @@ session = Session()
 logger = util.create_logger('db_operations')
 
 
+def convert_quiz_to_db_model(quiz):
+    return DbQuiz(
+        id=quiz.identifier,
+        name=quiz.name,
+        messages_per_day=quiz.msg_per_day,
+        short_id=0
+    )
+
+
+def convert_feedback_to_db_model(feedback, question_id):
+    return DbFeedback(
+        id=feedback.id,
+        identifier=feedback.identifier,
+        text=feedback.text,
+        question_id=question_id
+    )
+
+
+def convert_answer_to_db_model(answer, question_id):
+    return DbAnswer(
+        id=answer.id,
+        identifier=answer.identifier,
+        text=answer.text,
+        is_correct=answer.correct,
+        question_id=question_id
+    )
+
+
+def convert_question_to_db_model(question, quiz_id):
+    db_question = DbQuestion(
+        id=question.id,
+        text=question.text,
+        quiz_id=quiz_id,
+        is_essay=True if question.type == "Essay Question" else False,
+        is_multiple_choice=True if question.type != "Essay Question" else False
+    )
+    db_question.answers = [convert_answer_to_db_model(answer, question.id) for answer in question.answers]
+    db_question.feedback = [convert_feedback_to_db_model(feedback, question.id) for feedback in question.feedback]
+    return db_question
+
+
 def add_custom_question_to_db(question, quiz_id):
     """
     Adds a custom question to the database for a specified quiz.
@@ -24,7 +66,7 @@ def add_custom_question_to_db(question, quiz_id):
     :param question: The question object to be added.
     :param quiz_id: The ID of the quiz to which the question belongs.
     """
-    question_model = question.to_db_model(quiz_id=quiz_id)
+    question_model = convert_question_to_db_model(question, quiz_id)
     session.add(question_model)
     session.commit()
 
@@ -37,7 +79,7 @@ def add_quiz_to_db(quiz=None, quiz_model=None):
     :param quiz_model: The quiz_model to be added.
     """
     if quiz and not quiz_model:
-        quiz_model = quiz.to_db_model()
+        quiz_model = convert_quiz_to_db_model(quiz)
     if not quiz_model:
         return
     max_short_id = session.query(func.max(Quiz.short_id)).scalar()
