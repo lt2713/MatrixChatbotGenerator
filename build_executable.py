@@ -18,6 +18,6 @@ def build_executable(script_path, script_name, exe_name):
 if __name__ == "__main__":
     script_path = 'MatrixChatbotGenerator/'
     script_name = "start_user_interface"
-    exe_name = "Matrix Chatbot Generator"
+    exe_name = "Matrix Quizbot Generator"
     build_executable(script_path, script_name, exe_name)
 
