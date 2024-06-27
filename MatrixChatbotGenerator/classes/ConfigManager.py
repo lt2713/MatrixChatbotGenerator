@@ -8,6 +8,10 @@ KEY_FILE = './data/secret.key'
 
 
 class ConfigManager:
+    def __init__(self):
+        self.ensure_data_directory_exists()
+        self.key = self.load_key()
+
     @staticmethod
     def load_key():
         if not os.path.exists(KEY_FILE):
@@ -18,6 +22,12 @@ class ConfigManager:
             with open(KEY_FILE, 'rb') as key_file:
                 key = key_file.read()
         return key
+
+
+    @staticmethod
+    def ensure_data_directory_exists():
+        if not os.path.exists('./data'):
+            os.makedirs('./data')
 
     def load_config(self, name):
         config = configparser.ConfigParser()
