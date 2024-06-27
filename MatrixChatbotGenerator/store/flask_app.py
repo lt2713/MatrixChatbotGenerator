@@ -109,9 +109,9 @@ def helloworld():
 
 def main():
     if ssl_enabled:
-        app.run(host='0.0.0.0', port=2713,  ssl_context=('cert.pem', 'key.pem'))
+        app.run(host='0.0.0.0', port=2713,  ssl_context=('cert.pem', 'key.pem'))    # Adjust port number
     else:
-        app.run(host='0.0.0.0', port=2713)
+        app.run(host='0.0.0.0', port=2713)  # Adjust port number
 
 
 if __name__ == '__main__':

@@ -23,7 +23,7 @@ class UserInterface:
         # MatrixChatbotGenerator
         self.root = tk.Tk()
         # set window title
-        self.root.title('Create Chatbot from QTI')
+        self.root.title('Create Quizbot from QTI')
 
         # set window size
         self.root.geometry("500x300")
