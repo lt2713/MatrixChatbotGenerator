@@ -11,6 +11,7 @@ class Quiz:
         self.questions = questions if questions else []
 
     def print(self):
+        # print all attributes
         print(f'id: {self.identifier}')
         print(f'quiz name: {self.name}')
         print(f'messages per day: {self.msg_per_day}')
@@ -18,16 +19,20 @@ class Quiz:
         for question in self.questions:
             question.print()
 
+    def print_short(self):
+        # print a short version
+        print(f'id {self.identifier} {self.name}')
+        for question in self.questions:
+            print('\n')
+            question.print_short()
+
     def add_question(self, question):
+        # add a question to self.questions after validating
         if isinstance(question, Question) and question.validate():
             self.questions.append(question)
 
     def get_number_of_questions(self):
         return len(self.questions)
 
-    def print_short(self):
-        print(f'id {self.identifier} {self.name}')
-        for question in self.questions:
-            print('\n')
-            question.print_short()
+
 
