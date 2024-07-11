@@ -11,7 +11,7 @@ class QuizzesWindow:
 
         self.quizzes_window = tk.Toplevel(self.root)
         self.quizzes_window.title("Manage Quizzes")
-        self.quizzes_window.geometry("600x400")
+        self.quizzes_window.geometry("700x400")
 
         # Create a frame for the table and scrollbar
         self.frame = tk.Frame(self.quizzes_window)
