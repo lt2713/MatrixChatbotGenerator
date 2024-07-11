@@ -1,5 +1,4 @@
 from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
 from store.models import Base
 from store import db_config
 

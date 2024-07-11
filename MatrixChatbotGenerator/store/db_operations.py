@@ -1,6 +1,6 @@
-from store.models import Base, User, Quiz as DbQuiz, Question as DbQuestion, Answer as DbAnswer, \
+from store.models import User, Quiz as DbQuiz, Question as DbQuestion, Answer as DbAnswer, \
     Feedback as DbFeedback, LastQuestion, user_subscribed_to_quiz, user_asked_question
-from sqlalchemy import create_engine, exists, func, select, update
+from sqlalchemy import create_engine, exists, func, update
 from sqlalchemy.orm import sessionmaker
 from store import db_config
 from structures.quiz import Quiz
