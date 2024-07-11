@@ -59,6 +59,32 @@ def convert_question_to_db_model(question, quiz_id):
     return db_question
 
 
+def convert_question_model_to_question(db_question):
+    """
+    Converts a database question model to a Python Question class.
+
+    :param db_question: The database question model to convert.
+    :return: A Question object.
+    """
+    answers = [
+        Answer(key=ans.id, identifier=ans.identifier, text=ans.text, correct=ans.is_correct)
+        for ans in db_question.answers
+    ]
+    feedback = [
+        Feedback(key=fb.id, identifier=fb.identifier, text=fb.text)
+        for fb in db_question.feedback
+    ]
+    question = Question(
+        identifier=db_question.id,
+        question_type="Essay Question" if db_question.is_essay else "Multiple Choice",
+        text=db_question.text,
+        answers=answers,
+        feedback=feedback,
+        key=db_question.id
+    )
+    return question
+
+
 def add_custom_question_to_db(question, quiz_id):
     """
     Adds a custom question to the database for a specified quiz.
@@ -713,32 +739,6 @@ def reset_quiz_by_id(quiz_id, user_id):
         logger.error(e)
         return False
     return True
-
-
-def convert_question_model_to_question(db_question):
-    """
-    Converts a database question model to a Python Question class.
-
-    :param db_question: The database question model to convert.
-    :return: A Question object.
-    """
-    answers = [
-        Answer(key=ans.id, identifier=ans.identifier, text=ans.text, correct=ans.is_correct)
-        for ans in db_question.answers
-    ]
-    feedback = [
-        Feedback(key=fb.id, identifier=fb.identifier, text=fb.text)
-        for fb in db_question.feedback
-    ]
-    question = Question(
-        identifier=db_question.id,
-        question_type="Essay Question" if db_question.is_essay else "Multiple Choice",
-        text=db_question.text,
-        answers=answers,
-        feedback=feedback,
-        key=db_question.id
-    )
-    return question
 
 
 def ask_question_to_user(user_id, quiz_id, question_id, room_id):
