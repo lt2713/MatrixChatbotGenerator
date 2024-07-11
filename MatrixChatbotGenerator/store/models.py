@@ -1,5 +1,5 @@
 import uuid
-from sqlalchemy import create_engine, Column, String, Boolean, ForeignKey, Table, Integer, DateTime, func, event
+from sqlalchemy import create_engine, Column, String, Boolean, ForeignKey, Table, Integer, DateTime
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship, sessionmaker
 from store import db_config
