@@ -70,8 +70,13 @@ class QuizzesWindow:
             edit_button = tk.Button(self.table_frame, text="Edit", command=lambda q=quiz: self.edit_quiz(q))
             edit_button.grid(row=row, column=4, padx=10, pady=5, sticky='ew')
 
-            delete_button = tk.Button(self.table_frame, text="Delete", command=lambda q=quiz: self.delete_quiz(q))
+            delete_button = tk.Button(self.table_frame, text="Delete", command=lambda q=quiz: self.confirm_delete(q))
             delete_button.grid(row=row, column=5, padx=10, pady=5, sticky='ew')
+
+    def confirm_delete(self, quiz):
+        confirm = messagebox.askyesno("Confirm Delete", f"Are you sure you want to delete the quiz '{quiz['name']}'?")
+        if confirm:
+            self.delete_quiz(quiz)
 
     def delete_quiz(self, quiz):
         response = self.hh.delete(f'/quizzes/{quiz["id"]}')
