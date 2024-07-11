@@ -11,20 +11,11 @@ class Question:
         self.type = question_type
         self.text = text if text else ' '
         self.answers = [Answer(**ans) if isinstance(ans, dict) else ans for ans in (answers or [])]
-        generate_identifiers = False
-        if self.answers and len(self.answers) > 0:
-            for answer in self.answers:
-                if len(answer.identifier) > 1:
-                    generate_identifiers = True
-                    break
-        if generate_identifiers:
-            new_identifiers = list(string.ascii_uppercase)
-            for i, answer in enumerate(self.answers):
-                answer.identifier = new_identifiers[i]
-
+        self.check_answer_identifiers()  # generates new identifiers if they are not valid
         self.feedback = [Feedback(**fb) if isinstance(fb, dict) else fb for fb in (feedback or [])]
 
     def validate(self):
+        # Returns true if the question is legitimate, else False
         # Check for ID
         if not self.identifier:
             return False
@@ -56,6 +47,19 @@ class Question:
                     return False
         return True
 
+    def check_answer_identifiers(self):
+        # check if identifiers are okay, otherwise replace them
+        generate_identifiers = False
+        if self.answers and len(self.answers) > 0:
+            for answer in self.answers:
+                if len(answer.identifier) != 1:
+                    generate_identifiers = True
+                    break
+        if generate_identifiers:
+            new_identifiers = list(string.ascii_uppercase)
+            for i, answer in enumerate(self.answers):
+                answer.identifier = new_identifiers[i]
+
     def print(self):
         print(f'Question id: {self.identifier}')
         print(f'type {self.type}')
@@ -82,6 +86,7 @@ class Question:
                 feedback.print_short()
 
     def get(self):
+        # Format Question for Quizbot
         result = self.text + '\n'
         if len(self.answers) > 0:
             for answer in self.answers:

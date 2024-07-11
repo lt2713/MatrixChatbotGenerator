@@ -4,8 +4,7 @@ import uuid
 class Answer:
     def __init__(self, identifier, text, correct, key=None):
         self.id = key if key else str(uuid.uuid4())
-
-        self.identifier = self.extract_choice_suffix(identifier)
+        self.identifier = self.extract_choice_suffix(identifier)  # if identifier starts with CHOICE_, it gets replaced
         self.text = text
         self.correct = correct
 

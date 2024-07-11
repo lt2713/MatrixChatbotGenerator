@@ -13,7 +13,10 @@ class ConfigWindow:
         self.config = self.cm.load_config(config_name)
 
         self.root = tk.Tk()
-        self.root.title("Matrix Bot Configuration")
+        if self.config_name == 'Db':
+            self.root.title("Database Configuration")
+        else:
+            self.root.title("Matrix Bot Configuration")
 
         tk.Label(self.root, text="Server:").grid(row=0, column=0, padx=10, pady=5)
         self.server_entry = tk.Entry( self.root, width=40)
