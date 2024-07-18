@@ -1,5 +1,6 @@
 import inspect
 import logging
+import os
 from logging.handlers import RotatingFileHandler
 
 
@@ -13,6 +14,11 @@ class CustomFormatter(logging.Formatter):
 def create_logger(name):
     logger = logging.getLogger(name)
     logger.setLevel(logging.INFO)
+
+    # Ensure the directory exists
+    log_directory = './data'
+    if not os.path.exists(log_directory):
+        os.makedirs(log_directory)
 
     # Set up a RotatingFileHandler
     handler = RotatingFileHandler(f'./data/{name}.log', maxBytes=1024 * 1024 * 5, backupCount=5)
