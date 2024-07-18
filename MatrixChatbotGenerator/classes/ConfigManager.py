@@ -1,10 +1,17 @@
 import configparser
 import os
 from cryptography.fernet import Fernet
+from dotenv import load_dotenv
 
 # Paths to the config and key files
 CONFIG_FILE = './data/config.ini'
 KEY_FILE = './data/secret.key'
+
+load_dotenv()
+
+DB_URL = os.getenv('DB_URL')
+DB_USER = os.getenv('DB_USER')
+DB_PASSWORD = os.getenv('DB_PASSWORD')
 
 
 class ConfigManager:
@@ -35,11 +42,8 @@ class ConfigManager:
             config.read(CONFIG_FILE)
         else:
             if name == 'Db':
-                config[name] = {'server': 'https://ltquiz.duckdns.org', 'user_id': 'quizbot', 'password':
-                                self.encrypt_password('botquiz')}
-            elif name == 'Matrix':
-                config[name] = {'server': 'https://matrix-client.matrix.org', 'user_id': '@lt2713b:matrix.org',
-                                'password': self.encrypt_password('4Rz5EdP6Yem$R9W')}
+                config[name] = {'server': DB_URL, 'user_id': DB_USER, 'password':
+                                self.encrypt_password(DB_PASSWORD)}
             with open(CONFIG_FILE, 'w') as configfile:
                 config.write(configfile)
         return config

@@ -1,6 +1,7 @@
 import re
-from classes.ChatbotConfig import ChatbotConfig
-from classes.ConfigManager import ConfigManager
+
+from dotenv import load_dotenv
+
 from store.db_operations import *
 from nio import AsyncClient, MatrixRoom, RoomMessageText, SyncResponse, LoginResponse, InviteMemberEvent, MegolmEvent
 from util import utility_functions as util
@@ -11,19 +12,25 @@ import signal
 
 # Set up logging
 logger = util.create_logger('quizbot')
+load_dotenv()
+
+MATRIX_HOST = os.getenv('MATRIX_HOST')
+MATRIX_USER = os.getenv('MATRIX_USER')
+MATRIX_PASSWORD = os.getenv('MATRIX_PASSWORD')
 
 
 class Quizbot:
     def __init__(self):
-        self.config = ChatbotConfig()
-        self.homeserver = self.config.get_homeserver()
-        self.user = self.config.get_user_id()
-        encrypted_password = self.config.get_password()
-
-        self.password = ConfigManager.decrypt_password(encrypted_password)
+        # self.config = ChatbotConfig()
+        self.homeserver = MATRIX_HOST
+        self.user = MATRIX_USER
+        self.password = MATRIX_PASSWORD
         self.client = AsyncClient(self.homeserver, self.user)
+        print(self.homeserver)
+        print(self.user)
+        print(self.password)
 
-        logger.info(self.config.get())
+        # logger.info(self.config.get())
 
         # Path to store the next_batch token
         self.next_batch_file = './data/next_batch_token.json'
