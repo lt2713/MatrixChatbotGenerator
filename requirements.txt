@@ -4,3 +4,4 @@ matrix-nio
 SQLAlchemy
 flask
 requests
+python-dotenv
