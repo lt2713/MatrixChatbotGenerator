@@ -8,12 +8,12 @@ from store.db_operations import get_all_quizzes, count_subscribers, get_all_ques
     update_quiz_attributes, delete_quiz_by_id, add_quiz_to_db, add_db_question_to_db, add_db_answer_to_db, \
     add_db_feedback_to_db, count_questions
 
+ssl_enabled = False
 app = Flask(__name__)
 load_dotenv()
 
 FLASK_PORT = os.getenv('FLASK_PORT')
 FLASK_HOST = os.getenv('FLASK_HOST')
-ssl_enabled = False
 
 
 @app.route('/quizzes', methods=['GET'])

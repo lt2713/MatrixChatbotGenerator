@@ -31,6 +31,9 @@ The Matrix User must exist on the selected Matrix Home Server. The DB-fields are
 used for the Client Application as a default configuration. The DB_URL should be
 the url the flask application is running at. 
 
+- If you want to enable HTTPS, you have to copy your cert.pem and key.pem files into 
+the store directory and edit the file store/flask_app.py and set ssl_enabled to True.
+
 - If you changed the port in the .env file, you need to change it in the Dockerfile
 and in docker-compose.yml as well.
 
