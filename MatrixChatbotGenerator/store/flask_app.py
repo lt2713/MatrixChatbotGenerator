@@ -1,12 +1,18 @@
+import os
 import uuid
 
 from flask import Flask, request, jsonify
+from dotenv import load_dotenv
 from store.models import Quiz, Question, Answer, Feedback
 from store.db_operations import get_all_quizzes, count_subscribers, get_all_questions_for_quiz, get_quiz_by_id, \
     update_quiz_attributes, delete_quiz_by_id, add_quiz_to_db, add_db_question_to_db, add_db_answer_to_db, \
     add_db_feedback_to_db, count_questions
 
 app = Flask(__name__)
+load_dotenv()
+
+FLASK_PORT = os.getenv('FLASK_PORT')
+FLASK_HOST = os.getenv('FLASK_HOST')
 ssl_enabled = False
 
 
@@ -30,7 +36,8 @@ def fetch_all_quizzes():
 @app.route('/quiz/<quiz_id>/questions', methods=['GET'])
 def fetch_questions_for_quiz(quiz_id):
     questions = get_all_questions_for_quiz(quiz_id)
-    return jsonify([{'id': question.id, 'type': question.type, 'text': question.text} for question in questions])
+    return jsonify([{'id': question.id, 'text': question.text, 'is_multiple_choice':
+                     question.is_multiple_choice, 'is_essay': question.is_essay} for question in questions])
 
 
 @app.route('/quizzes/<quiz_id>', methods=['PUT'])
@@ -109,9 +116,9 @@ def helloworld():
 
 def main():
     if ssl_enabled:
-        app.run(host='0.0.0.0', port=2713,  ssl_context=('cert.pem', 'key.pem'))    # Adjust port number
+        app.run(host=FLASK_HOST, port=FLASK_PORT,  ssl_context=('cert.pem', 'key.pem'))    # Adjust port number
     else:
-        app.run(host='0.0.0.0', port=2713)  # Adjust port number
+        app.run(host=FLASK_HOST, port=FLASK_PORT)  # Adjust port number
 
 
 if __name__ == '__main__':
