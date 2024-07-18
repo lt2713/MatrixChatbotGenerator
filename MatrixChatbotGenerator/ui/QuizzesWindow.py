@@ -2,12 +2,13 @@ import tkinter as tk
 from tkinter import messagebox
 from tkinter import ttk
 from ui.QuizWindow import QuizWindow
+from util.http_handler import HttpHandler
 
 
 class QuizzesWindow:
-    def __init__(self, root, http_handler):
+    def __init__(self, root):
         self.root = root
-        self.hh = http_handler
+        self.hh = HttpHandler()
 
         self.quizzes_window = tk.Toplevel(self.root)
         self.quizzes_window.title("Manage Quizzes")

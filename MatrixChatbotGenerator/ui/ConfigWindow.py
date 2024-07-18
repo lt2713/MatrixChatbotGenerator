@@ -47,8 +47,8 @@ class ConfigWindow:
         user_id = self.user_id_entry.get().strip()
         password = self.password_entry.get().strip()
 
-        if not server or not user_id or not password:
-            self.show_message("error", "Error", "All fields are required.")
+        if not server:
+            self.show_message("error", "Error", "Server is required.")
             return
 
         encrypted_password = ConfigManager.encrypt_password(password)
@@ -66,19 +66,16 @@ class ConfigWindow:
             print(f'An Error occurred in the config window: {e}')
 
     def test_connection(self):
-        if not self.server_entry.get().strip() \
-                or not self.user_id_entry.get().strip() \
-                or not self.password_entry.get().strip():
-            self.show_message("error", "Error", "All fields are required.")
+        if not self.server_entry.get().strip():
+            self.show_message("error", "Error", "Server is required.")
             return
         hh = HttpHandler(self.server_entry.get().strip(), self.user_id_entry.get().strip(),
                          self.password_entry.get().strip())
         try:
-            response = hh.get('/helloworld')
-            if response.status_code == 200:
+            if hh.test_connection():
                 self.show_message("info", "Success", "Connection successful!")
             else:
-                self.show_message("error", "Error", f"Connection failed: {response.status_code}")
+                self.show_message("error", "Error", f"Connection failed!")
         except Exception as e:
             self.show_message("error", "Error", f"Connection failed: {e}")
 

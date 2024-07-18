@@ -8,11 +8,18 @@ class HttpHandler:
     def __init__(self, url=None, user=None, password=None):
         self.cm = ConfigManager()
         self.config = self.cm.load_config('Db')
-
-        self.api_url = url if url else self.config['Db']['server']
-        self.user = user if user else self.config['Db']['user_id']
-        self.password = password if password else ConfigManager.decrypt_password(self.config['Db']['password'])
+        if url and user and password:
+            self.api_url = url
+            self.user = user
+            self.password = password
+        else:
+            self.load_config()
         self.auth = HTTPBasicAuth(self.user, self.password)
+
+    def load_config(self):
+        self.api_url = self.config['Db']['server']
+        self.user = self.config['Db']['user_id']
+        self.password = ConfigManager.decrypt_password(self.config['Db']['password'])
 
     def get(self, path):
         response = requests.get(f'{self.api_url}{path}', auth=self.auth)
@@ -31,7 +38,7 @@ class HttpHandler:
         return response
 
     def test_connection(self):
-        if not self.api_url or not self.user or not self.password:
+        if not self.api_url:
             return False
         response = requests.get(f'{self.api_url}/helloworld', auth=self.auth)
         if response.status_code == 200:

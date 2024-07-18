@@ -137,7 +137,7 @@ class UserInterface:
         self.quiz_name_entry.focus_set()
 
     def open_quizzes_window(self):
-        quizzes_window = QuizzesWindow(self.root, self.hh)
+        quizzes_window = QuizzesWindow(self.root)
         quizzes_window.loop()
 
     @staticmethod
