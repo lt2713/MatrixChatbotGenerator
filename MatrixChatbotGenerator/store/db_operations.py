@@ -108,7 +108,7 @@ def add_quiz_to_db(quiz=None, quiz_model=None):
         quiz_model = convert_quiz_to_db_model(quiz)
     if not quiz_model:
         return
-    max_short_id = session.query(func.max(Quiz.short_id)).scalar()
+    max_short_id = session.query(func.max(DbQuiz.short_id)).scalar()
     if max_short_id is None:
         max_short_id = 0
     quiz_model.short_id = max_short_id + 1
@@ -162,7 +162,7 @@ def quiz_exists(quiz_name):
     :param quiz_name: The name of the quiz to check.
     :return: True if the quiz exists, False otherwise.
     """
-    return session.query(exists().where(Quiz.name == quiz_name)).scalar()
+    return session.query(exists().where(DbQuiz.name == quiz_name)).scalar()
 
 
 def user_exists(user_id):
@@ -204,7 +204,7 @@ def get_quiz_id_by_name(quiz_name):
     :return: The ID of the quiz if found, otherwise None.
     """
     normalized_quiz_name = quiz_name.strip().lower()
-    quiz = session.query(Quiz).filter(func.lower(Quiz.name) == normalized_quiz_name).first()
+    quiz = session.query(DbQuiz).filter(func.lower(DbQuiz.name) == normalized_quiz_name).first()
     return quiz.id if quiz else None
 
 
@@ -215,7 +215,7 @@ def get_quiz_id_by_short_id(short_id):
     :param short_id: The short ID of the quiz.
     :return: The ID of the quiz if found, otherwise None.
     """
-    quiz = session.query(Quiz).filter(Quiz.short_id == short_id).first()
+    quiz = session.query(DbQuiz).filter(DbQuiz.short_id == short_id).first()
     return quiz.id if quiz else None
 
 
@@ -226,7 +226,7 @@ def get_subscribed_quizzes(user_id):
     :param user_id: The ID of the user.
     :return: A list of quizzes the user is subscribed to, or an empty list if there are no subscriptions.
     """
-    quizzes = session.query(Quiz).join(user_subscribed_to_quiz).\
+    quizzes = session.query(DbQuiz).join(user_subscribed_to_quiz).\
         filter(user_subscribed_to_quiz.c.user_id == user_id).all()
     return quizzes if quizzes else []
 
@@ -261,7 +261,7 @@ def get_quiz_by_id(quiz_id):
     :param quiz_id: The ID of the quiz.
     :return: quiz
     """
-    return session.query(Quiz).filter_by(id=quiz_id).first()
+    return session.query(DbQuiz).filter_by(id=quiz_id).first()
 
 
 def get_subscription(quiz_id, user_id):
@@ -292,7 +292,7 @@ def get_all_quizzes():
 
     :return: The list of all quizzes
     """
-    return session.query(Quiz).all()
+    return session.query(DbQuiz).all()
 
 
 def get_asked_questions(user_id, quiz_id):
@@ -452,7 +452,7 @@ def get_all_questions_for_quiz(quiz_id):
     :return: A list of Question objects associated with the specified quiz. Returns an empty list if an error occurs.
     """
     try:
-        questions = session.query(Question).filter_by(quiz_id=quiz_id).all()
+        questions = session.query(DbQuestion).filter_by(quiz_id=quiz_id).all()
         return questions
     except Exception as e:
         logger.error(f"An error occurred in {util.current_function_name()}: {e}")
@@ -533,7 +533,7 @@ def update_quiz_attributes(quiz_id, name, messages_per_day):
     """
     session = Session()
     try:
-        quiz = session.query(Quiz).filter_by(id=quiz_id).first()
+        quiz = session.query(DbQuiz).filter_by(id=quiz_id).first()
         if quiz:
             quiz.name = name
             quiz.messages_per_day = messages_per_day
@@ -679,7 +679,7 @@ def delete_quiz_by_id(quiz_id):
     :return: True if the deletion was successful, False otherwise.
     """
     try:
-        quiz = session.query(Quiz).filter_by(id=quiz_id).first()
+        quiz = session.query(DbQuiz).filter_by(id=quiz_id).first()
         if not quiz:
             return
 
@@ -724,7 +724,7 @@ def reset_quiz_by_id(quiz_id, user_id):
     :return: True if the reset was successful, False otherwise.
     """
     try:
-        quiz = session.query(Quiz).filter_by(id=quiz_id).first()
+        quiz = session.query(DbQuiz).filter_by(id=quiz_id).first()
         if not quiz:
             return
 
