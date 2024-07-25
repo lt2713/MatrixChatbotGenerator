@@ -44,10 +44,10 @@ class Quizbot:
                 'subscribed \t\t\t\t show subscribed quizzes\n'
                 'subscribe quiz\t\t\t subscribe to given quiz\n'
                 'unsubscribe quiz\t\t\t unsubscribe from given quiz\n'
-                'nextquestion quiz\t\t get the next question from given quiz\n'
-                'messages quiz number \t adjust the messages sent per day\n'
-                'reset quiz\t\t\t reset the quiz for me \n'
-                'delete quiz\t\t\t delete the quiz\n'
+                'nextquestion quiz\t\t\t get the next question from given quiz\n'
+                'messages quiz number \t\t adjust the number of messages sent per day\n'
+                'reset quiz\t\t\t\t reset the quiz for me \n'
+                # 'delete quiz\t\t\t\t delete the quiz\n'
                 )
 
     @staticmethod
@@ -277,18 +277,19 @@ class Quizbot:
         command = words[0]
         parameter = message[len(words[0]):].strip() if len(words) > 1 else None
 
-        if message.lower().startswith('hello'):
+        if command.startswith('hello') or command.startswith('hi') or command.startswith('hey') \
+                or command.startswith('hallo'):
             return "Hello!"
         elif command in ('help', '!help') and len(words) == 1:
             return self.message_help()
-        elif command in ('quizzes', 'quizzes') and len(words) == 1:
+        elif command in ('quizzes', '!quizzes') and len(words) == 1:
             return self.quizzes_list()
         elif command in ('subscribe', '!subscribe', 'unsubscribe', '!unsubscribe', '!sub', '!unsub'):
             if command in ('subscribe', '!subscribe', '!sub'):
                 return self.subscribe(user_id, room_id, parameter)
             else:
                 return self.unsubscribe(user_id, parameter)
-        elif command == 'subscribed':
+        elif command in ('subscribed', '!subscribed'):
             return self.subscribed_quizzes(user_id)
         elif command in ('nextquestion', '!nextquestion', '!nq'):
             return self.next_question(user_id, parameter, room_id)
@@ -314,8 +315,8 @@ class Quizbot:
                     message = event.body
                 else:
                     message = ' '
-                    logger.error(f"Encrypted messages are not supported")
-                    return
+                    response_message = 'Encrypted messages are not supported.'
+                    logger.error(f"{response_message}")
             elif isinstance(event, RoomMessageText):
                 message = event.body
             else:
@@ -344,7 +345,7 @@ class Quizbot:
             logger.info("Periodic Task started")
             if start_time <= current_time <= end_time:
                 await self.send_quiz_questions()
-                await asyncio.sleep(60)  # Run every x seconds
+                await asyncio.sleep(15*60)  # Run every x seconds
             else:
                 # If outside the time range, wait for next full hour before checking again
                 logger.info("Periodic Task outside the time range. Trying again in an hour.")
