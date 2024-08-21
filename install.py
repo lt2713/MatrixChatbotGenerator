@@ -1,4 +1,4 @@
-# Script to install the repository via a virtual environment
+# Script to install the repository locally via a virtual environment
 # the virtual environment will be called "venv"
 
 import subprocess

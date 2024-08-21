@@ -10,6 +10,7 @@ from classes.QTIParser import QTIParser
 from classes.ChatbotGenerator import ChatbotGenerator
 from ui.ConfigWindow import ConfigWindow
 from ui.QuizzesWindow import QuizzesWindow
+from ui.QuizbotInfoWindow import QuizbotInfoWindow
 from util.http_handler import HttpHandler
 
 
@@ -30,44 +31,59 @@ class UserInterface:
         self.root.grid_columnconfigure(0, weight=1, minsize=150)
         self.root.grid_columnconfigure(1, weight=3, minsize=350)
 
-        # create menu bar
-        self.menu_bar = tk.Menu(self.root)
-        self.root.config(menu=self.menu_bar)
-        # create file menu
-        file_menu = tk.Menu(self.menu_bar, tearoff=0)
-        self.menu_bar.add_cascade(label="File", menu=file_menu)
-        file_menu.add_command(label="Edit Db Config", command=self.open_db_config)
-        file_menu.add_command(label="Manage Quizzes", command=self.open_quizzes_window)
-        # file_menu.add_command(label="Edit Matrix Config", command=self.open_matrix_config)
-        file_menu.add_separator()
-        file_menu.add_command(label="Exit", command=self.root.quit)
+        # Create a frame to act as a custom menu bar
+        menu_frame = tk.Frame(self.root, height=40, bg="#e6e6e6")
+        menu_frame.grid(row=0, column=0, columnspan=2, sticky='ew')
 
-        # create chatbot name input field
-        tk.Label(self.root, text='Quiz Name').grid(row=0, column=0, padx=10, pady=5, sticky='w')
+        # Create a custom dropdown button for "Actions"
+        actions_button = tk.Menubutton(menu_frame, text="Actions", bg="#e6e6e6", fg="black",
+                                       relief="flat", padx=10, pady=3)
+        actions_button.grid(row=0, column=0, padx=5, pady=3)
+
+        actions_menu = tk.Menu(actions_button, tearoff=0, bg="#e6e6e6", fg="black", relief="flat")
+        actions_button["menu"] = actions_menu
+        actions_menu.add_command(label="Share Quizbot", command=self.show_quizbot_info)
+        actions_menu.add_separator()
+        actions_menu.add_command(label="Manage Quizzes", command=self.open_quizzes_window)
+
+        # Create a custom dropdown button for "Options"
+        options_button = tk.Menubutton(menu_frame, text="Settings", bg="#e6e6e6", fg="black",
+                                       relief="flat", padx=10, pady=3)
+        options_button.grid(row=0, column=1, padx=5, pady=3)
+
+        options_menu = tk.Menu(options_button, tearoff=0, bg="#e6e6e6", fg="black", relief="flat")
+        options_button["menu"] = options_menu
+
+        options_menu.add_command(label="Configure", command=self.open_db_config)
+        options_menu.add_separator()
+        options_menu.add_command(label="Exit", command=self.root.quit)
+
+        # Create chatbot name input field
+        tk.Label(self.root, text='Quiz Name').grid(row=1, column=0, padx=10, pady=5, sticky='w')
         self.quiz_name_entry = tk.Entry(self.root, width=50)
-        self.quiz_name_entry.grid(row=0, column=1, padx=10, pady=5, sticky='w')
+        self.quiz_name_entry.grid(row=1, column=1, padx=10, pady=5, sticky='w')
 
-        # create messages per day dropdown
-        tk.Label(self.root, text="Messages per day:").grid(row=1, column=0, padx=10, pady=5, sticky='w')
+        # Create messages per day dropdown
+        tk.Label(self.root, text="Messages per day:").grid(row=2, column=0, padx=10, pady=5, sticky='w')
         self.msg_per_day_options = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10"]
         self.msg_per_day_selected = tk.StringVar()
         self.msg_per_day_dropdown = ttk.Combobox(self.root, textvariable=self.msg_per_day_selected,
                                                  values=self.msg_per_day_options)
-        self.msg_per_day_dropdown.grid(row=1, column=1, padx=10, pady=5, sticky='w')
+        self.msg_per_day_dropdown.grid(row=2, column=1, padx=10, pady=5, sticky='w')
         self.msg_per_day_dropdown.current(0)  # Set default selection
 
         self.default_file_name = "No file selected"
-        # create select file button
+        # Create select file button
         if self.fileselection:
             tk.Button(self.root, text='Select File', command=self.select_file)\
-                .grid(row=2, column=0, padx=10, pady=20, sticky='w')
+                .grid(row=3, column=0, padx=10, pady=20, sticky='w')
             self.file_label = tk.Label(self.root, text=self.default_file_name)
-            self.file_label.grid(row=2, column=1, padx=10, pady=20, sticky='w')
+            self.file_label.grid(row=3, column=1, padx=10, pady=20, sticky='w')
         else:
-            tk.Label(self.root, text='Exported Questions are used').grid(row=2, column=1, padx=10, sticky='w')
+            tk.Label(self.root, text='Exported Questions are used').grid(row=3, column=1, padx=10, sticky='w')
 
-        # create submit button
-        tk.Button(self.root, text='Submit', command=self.submit).grid(row=3, column=0, columnspan=2, padx=10, pady=50)
+        # Create submit button
+        tk.Button(self.root, text='Submit', command=self.submit).grid(row=4, column=0, columnspan=2, padx=10, pady=50)
 
     def select_file(self):
         file_path = filedialog.askopenfilename()
@@ -149,6 +165,11 @@ class UserInterface:
     def open_matrix_config():
         config_window = ConfigWindow('Matrix')
         config_window.loop()
+
+    @staticmethod
+    def show_quizbot_info():
+        quizbot_info_window = QuizbotInfoWindow()
+        quizbot_info_window.loop()
 
     def loop(self):
         try:
