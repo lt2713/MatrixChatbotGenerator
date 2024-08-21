@@ -114,6 +114,16 @@ def helloworld():
     return jsonify('Hello World')
 
 
+@app.route('/quizbot_info', methods=['GET'])
+def quizbot_info():
+    matrix_host = os.getenv('MATRIX_HOST')
+    matrix_user = os.getenv('MATRIX_USER')
+    return jsonify({
+        "matrix_host": matrix_host,
+        "matrix_user": matrix_user
+    })
+
+
 def main():
     if ssl_enabled:
         app.run(host=FLASK_HOST, port=FLASK_PORT,  ssl_context=('cert.pem', 'key.pem'))    # Adjust port number
