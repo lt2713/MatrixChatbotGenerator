@@ -13,17 +13,18 @@ Before you begin, ensure you have the following installed on your local machine:
 - Docker
 - Docker Compose
 - Python 3
-- pyInstaller
+
+All terminal commands given below are for Windows machines.
 
 ## Installation of the Server application
 
 Clone the Repository:
 
-- git clone https://github.com/lt2713/MatrixChatbotGenerator
+>git clone https://github.com/lt2713/MatrixChatbotGenerator
 
 Create the file ".env" in the base directory using the file ".env.example" as a model:
 
-- cp .env.example .env
+>copy .env.example .env
 
 Edit the .env file:
 Some parameteres can be adjusted using the .env file. The Matrix Server, User and password 
@@ -39,7 +40,28 @@ and in docker-compose.yml as well.
 
 Build and start the Docker container:
 
-- docker-compose up --build
+>docker-compose up --build
+
+### Installation of the Server application without Docker
+
+You can run the application without using docker. To do so, follow the guide above until you have
+setup your .env file. Then follow these steps:
+
+Install the dependencies using a virtual environment:
+
+>python install.py
+
+Activate the virtual environment:
+
+>venv\Scripts\activate
+
+Run the flask app used for the HTTP Requests of the client application:
+
+>python MatrixChatbotGenerator\run_flask_app.py
+
+In a different terminal run the script to start the Chatbot after activating the virtual environment:
+
+>python MatrixChatbotGenerator\run_quizbot.py
 
 ## Accessing the Server Applications
 
@@ -50,11 +72,19 @@ The Quizbot should be available to chat on the Matrix Home Server.
 
 Clone the Repository
 
-- git clone https://github.com/lt2713/MatrixChatbotGenerator
+>git clone https://github.com/lt2713/MatrixChatbotGenerator
+
+Install the dependencies using a virtual environment:
+
+>python install.py
+
+Activate the virtual environment:
+
+>venv\Scripts\activate
 
 Create the Client application:
 
-- python build_executable.py
+> python build_executable.py
 
 ## Accessing the Client Application
 
