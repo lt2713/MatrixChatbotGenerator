@@ -28,7 +28,7 @@ def build_executable(script_path, script_name, exe_name, hidden_imports=None):
 
     try:
         # Run the command
-        subprocess.run(command, check=True)
+        subprocess.run(command, check=True, shell=True)
 
         # Paths for the new subfolder and data folder
         new_subfolder = os.path.join("dist", "MatrixChatbotGenerator")
