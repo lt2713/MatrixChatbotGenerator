@@ -5,3 +5,4 @@ SQLAlchemy
 flask
 requests
 python-dotenv
+pyinstaller
