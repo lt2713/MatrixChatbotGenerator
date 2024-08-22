@@ -66,6 +66,7 @@ In a different terminal run the script to start the Chatbot after activating the
 ## Accessing the Server Applications
 
 The flaskapp should be available at http://localhost:8000 (or your chosen port).
+To test if the application is running correctly, visit http://localhost:8000/helloworld in your browser.
 The Quizbot should be available to chat on the Matrix Home Server.
 
 ## Installation of the Client Application
